@@ -18,9 +18,11 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import PeopleIcon from '@mui/icons-material/People';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { useAuth } from '../contexts/AuthContext';
 
 const FamilyLogin = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -46,8 +48,17 @@ const FamilyLogin = () => {
     }
 
     // In a real app, we would authenticate with a backend
-    // For demo purposes, we'll just navigate to the dashboard
-    navigate('/family/dashboard');
+    // For demo purposes, we'll authenticate using the context
+    const userData = {
+      name: 'Family Member', // Demo user data
+      email: formData.email,
+      patientName: 'John Doe', // Demo connected patient
+      relation: 'Caretaker',
+      lastActive: 'Yesterday',
+      // Add any other user data you need
+    };
+
+    login('family', userData);
   };
 
   return (

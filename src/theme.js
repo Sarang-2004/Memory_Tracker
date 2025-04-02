@@ -166,16 +166,27 @@ let theme = createTheme({
       },
     },
     MuiTextField: {
+      defaultProps: {
+        autoComplete: 'off',
+      },
       styleOverrides: {
         root: {
           marginBottom: 16,
           '& .MuiInputBase-input': {
             padding: '14px 16px',
             fontSize: '1rem',
+            '&:-webkit-autofill': {
+              WebkitBoxShadow: '0 0 0 1000px white inset',
+              WebkitTextFillColor: '#333333',
+            },
           },
           '& .MuiInputLabel-root': {
             fontSize: '1rem',
           },
+          '& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline':
+            {
+              borderColor: '#4a3b9c',
+            },
         },
       },
     },

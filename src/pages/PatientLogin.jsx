@@ -18,9 +18,11 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import AccessibilityNewIcon from '@mui/icons-material/AccessibilityNew';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { useAuth } from '../contexts/AuthContext';
 
 const PatientLogin = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -46,8 +48,14 @@ const PatientLogin = () => {
     }
 
     // In a real app, we would authenticate with a backend
-    // For demo purposes, we'll just navigate to the dashboard
-    navigate('/patient/dashboard');
+    // For demo purposes, we'll authenticate using the context
+    const userData = {
+      name: 'John Doe', // Demo user data
+      email: formData.email,
+      // Add any other user data you need
+    };
+
+    login('patient', userData);
   };
 
   return (
