@@ -52,6 +52,42 @@ const PatientLogin = () => {
     const userData = {
       name: 'John Doe', // Demo user data
       email: formData.email,
+      familyMembers: [
+        { id: 1, name: 'Sarah Thompson', relation: 'Daughter' },
+        { id: 2, name: 'Mark Johnson', relation: 'Son' },
+      ],
+      memories: [
+        {
+          id: 1,
+          title: 'Beach Day',
+          description: 'A wonderful day at Malibu Beach with family',
+          date: 'June 15, 2023',
+          imageUrl: 'https://source.unsplash.com/random/800x600/?beach',
+          location: 'Malibu, CA',
+          tags: ['family', 'beach', 'summer'],
+          reactions: 5,
+        },
+        {
+          id: 2,
+          title: 'Birthday Celebration',
+          description: 'My 65th birthday with all the grandchildren',
+          date: 'May 2, 2023',
+          imageUrl: 'https://source.unsplash.com/random/800x600/?birthday',
+          location: 'Home',
+          tags: ['birthday', 'family', 'celebration'],
+          reactions: 8,
+        },
+        {
+          id: 3,
+          title: 'Garden Visit',
+          description: 'Visiting the Botanical Gardens on a sunny day',
+          date: 'April 10, 2023',
+          imageUrl: 'https://source.unsplash.com/random/800x600/?garden',
+          location: 'Botanical Gardens',
+          tags: ['nature', 'garden', 'spring'],
+          reactions: 3,
+        },
+      ],
       // Add any other user data you need
     };
 

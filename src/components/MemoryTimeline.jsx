@@ -15,6 +15,7 @@ import ViewListIcon from '@mui/icons-material/ViewList';
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import { MemoryCard } from './';
+import catImage from '../assets/cat.jpg';
 
 // Sample data for testing
 const sampleMemories = [
@@ -23,7 +24,7 @@ const sampleMemories = [
     title: 'Family Picnic',
     date: '2023-06-15',
     type: 'photo',
-    content: 'https://source.unsplash.com/random/300x200/?family',
+    content: catImage,
     location: 'Central Park',
     people: ['Mom', 'Dad', 'Sister'],
     filter: 'polaroid',
@@ -54,7 +55,7 @@ const sampleMemories = [
     title: 'Garden Flowers',
     date: '2023-03-25',
     type: 'photo',
-    content: 'https://source.unsplash.com/random/300x200/?garden',
+    content: catImage,
     location: 'Backyard',
     people: ['Neighbor'],
     filter: 'sepia',
@@ -74,7 +75,7 @@ const sampleMemories = [
     title: 'Old Neighborhood',
     date: '2023-01-05',
     type: 'photo',
-    content: 'https://source.unsplash.com/random/300x200/?neighborhood',
+    content: catImage,
     location: 'Downtown',
     people: [],
     filter: 'vintage',

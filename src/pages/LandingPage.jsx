@@ -92,115 +92,168 @@ const LandingPage = () => {
         animate={{ opacity: 1 }}
         transition={{ duration: 1 }}
         sx={{
-          bgcolor: 'primary.main',
+          background: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`,
           color: 'white',
-          py: { xs: 6, sm: 8, md: 12 },
+          py: { xs: 8, sm: 12, md: 16 },
           px: { xs: 2, sm: 3, md: 4 },
-          textAlign: 'center',
+          position: 'relative',
+          overflow: 'hidden',
         }}>
         <Container maxWidth='lg'>
-          <motion.div
-            initial={{ y: -50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}>
-            <Typography
-              variant='h1'
-              component='h1'
-              sx={{
-                fontSize: { xs: '2.5rem', md: '3.5rem' },
-                fontWeight: 700,
-                lineHeight: 1.2,
-                mb: 3,
-                color: 'white',
-              }}>
-              <span
-                style={{
-                  fontFamily: '"Playfair Display", serif',
-                  fontWeight: 800,
-                }}>
-                Memo
-              </span>
-              <span
-                style={{
-                  fontFamily: 'Roboto, sans-serif',
-                  fontWeight: 400,
-                }}>
-                Bloom
-              </span>
-            </Typography>
-          </motion.div>
+          <Box
+            sx={{
+              position: 'absolute',
+              top: -100,
+              right: -100,
+              width: 300,
+              height: 300,
+              borderRadius: '50%',
+              background: 'rgba(255, 255, 255, 0.1)',
+              zIndex: 0,
+            }}
+          />
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: -50,
+              left: -50,
+              width: 200,
+              height: 200,
+              borderRadius: '50%',
+              background: 'rgba(255, 255, 255, 0.05)',
+              zIndex: 0,
+            }}
+          />
 
-          <motion.div
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.4 }}>
-            <Typography
-              variant='h2'
-              component='h2'
-              sx={{
-                fontSize: { xs: '1.25rem', md: '1.75rem' },
-                fontWeight: 400,
-                lineHeight: 1.6,
-                mb: 6,
-                maxWidth: '800px',
-                margin: '0 auto',
-                color: 'white',
-              }}>
-              Preserving Memories, Nurturing Connections
-            </Typography>
-          </motion.div>
+          <Grid
+            container
+            spacing={5}
+            alignItems='center'
+            sx={{ position: 'relative', zIndex: 1 }}>
+            <Grid item xs={12} md={6}>
+              <motion.div
+                initial={{ y: -30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.2 }}>
+                <Typography
+                  variant='h1'
+                  component='h1'
+                  sx={{
+                    fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4.5rem' },
+                    fontWeight: 700,
+                    lineHeight: 1.1,
+                    mb: 3,
+                    textAlign: { xs: 'center', md: 'left' },
+                  }}>
+                  <span
+                    style={{
+                      fontFamily: '"Playfair Display", serif',
+                      fontWeight: 800,
+                    }}>
+                    Memo
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: 'Roboto, sans-serif',
+                      fontWeight: 400,
+                    }}>
+                    Bloom
+                  </span>
+                </Typography>
 
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.6 }}>
-            <Grid
-              container
-              spacing={{ xs: 2, sm: 3 }}
-              justifyContent='center'
-              direction={{ xs: 'column', sm: 'row' }}
-              alignItems='center'>
-              <Grid item>
-                <Button
-                  variant='contained'
-                  size='large'
-                  color='secondary'
-                  onClick={handlePatientLogin}
-                  startIcon={<AccessibilityNewIcon />}
+                <Typography
+                  variant='h5'
+                  component='h2'
                   sx={{
-                    py: { xs: 1, sm: 1.5 },
-                    px: { xs: 3, sm: 4 },
-                    borderRadius: 8,
-                    width: { xs: '100%', sm: 'auto' },
-                    minWidth: { xs: '200px', sm: 'auto' },
+                    fontSize: { xs: '1.25rem', sm: '1.5rem' },
+                    fontWeight: 400,
+                    lineHeight: 1.6,
+                    mb: 4,
+                    textAlign: { xs: 'center', md: 'left' },
+                    opacity: 0.9,
                   }}>
-                  Patient Login
-                </Button>
-              </Grid>
-              <Grid item>
-                <Button
-                  variant='outlined'
-                  size='large'
-                  onClick={handleFamilyLogin}
-                  startIcon={<PeopleIcon />}
+                  Preserve Memories. Nurture Connections. Stay Present in Every
+                  Moment.
+                </Typography>
+
+                <Box
                   sx={{
-                    py: { xs: 1, sm: 1.5 },
-                    px: { xs: 3, sm: 4 },
-                    borderRadius: 8,
-                    borderColor: 'white',
-                    color: 'white',
-                    width: { xs: '100%', sm: 'auto' },
-                    minWidth: { xs: '200px', sm: 'auto' },
-                    '&:hover': {
-                      borderColor: 'white',
-                      bgcolor: 'rgba(255, 255, 255, 0.1)',
-                    },
+                    display: 'flex',
+                    gap: 2,
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    justifyContent: { xs: 'center', md: 'flex-start' },
                   }}>
-                  Family Login
-                </Button>
-              </Grid>
+                  <Button
+                    component={motion.button}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    variant='contained'
+                    color='secondary'
+                    size='large'
+                    onClick={handlePatientLogin}
+                    sx={{
+                      py: 1.5,
+                      px: 4,
+                      borderRadius: 10,
+                      fontSize: '1rem',
+                      fontWeight: 500,
+                      boxShadow: '0 8px 16px rgba(0,0,0,0.1)',
+                    }}>
+                    Get Started
+                  </Button>
+                  <Button
+                    component={motion.button}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    variant='outlined'
+                    size='large'
+                    onClick={handleFamilyLogin}
+                    sx={{
+                      py: 1.5,
+                      px: 4,
+                      borderRadius: 10,
+                      fontSize: '1rem',
+                      fontWeight: 500,
+                      color: 'white',
+                      borderColor: 'rgba(255,255,255,0.5)',
+                      '&:hover': {
+                        borderColor: 'white',
+                        background: 'rgba(255,255,255,0.1)',
+                      },
+                    }}>
+                    Family Connect
+                  </Button>
+                </Box>
+              </motion.div>
             </Grid>
-          </motion.div>
+
+            <Grid
+              item
+              xs={12}
+              md={6}
+              sx={{ display: { xs: 'none', md: 'block' } }}>
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.5 }}>
+                <Box
+                  component='img'
+                  src='https://source.unsplash.com/random/600x600/?family,memory,elderly'
+                  alt='Family memories'
+                  sx={{
+                    width: '100%',
+                    maxWidth: 500,
+                    height: 'auto',
+                    borderRadius: 4,
+                    boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+                    transform: 'perspective(1000px) rotateY(-5deg)',
+                    mx: 'auto',
+                    display: 'block',
+                  }}
+                />
+              </motion.div>
+            </Grid>
+          </Grid>
         </Container>
       </Box>
 

@@ -11,3 +11,4 @@ export { default as PhotoUploader } from './PhotoUploader';
 export { default as LocationTracker } from './LocationTracker';
 export { default as EmergencyContact } from './EmergencyContact';
 export { default as AccessibilityControls } from './AccessibilityControls';
+export { default as MemoryCarousel } from './MemoryCarousel';

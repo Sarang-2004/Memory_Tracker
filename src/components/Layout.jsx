@@ -1,18 +1,615 @@
-import { Box, Container, Toolbar } from '@mui/material';
-import { Outlet } from 'react-router-dom';
-import { Navbar, Footer } from './';
+import { useState, useEffect } from 'react';
+import { Outlet, useLocation, Link as RouterLink } from 'react-router-dom';
+import {
+  AppBar,
+  Box,
+  CssBaseline,
+  Drawer,
+  IconButton,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Toolbar,
+  Typography,
+  Button,
+  useMediaQuery,
+  useTheme,
+  Avatar,
+  Menu,
+  MenuItem,
+  Divider,
+  Container,
+  Tooltip,
+  alpha,
+} from '@mui/material';
+import { styled } from '@mui/material/styles';
+import MenuIcon from '@mui/icons-material/Menu';
+import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
+import TimelineOutlinedIcon from '@mui/icons-material/TimelineOutlined';
+import AddPhotoAlternateOutlinedIcon from '@mui/icons-material/AddPhotoAlternateOutlined';
+import HelpOutlineOutlinedIcon from '@mui/icons-material/HelpOutlineOutlined';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import SpaOutlinedIcon from '@mui/icons-material/SpaOutlined';
+import LogoutIcon from '@mui/icons-material/Logout';
+import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import { useAuth } from '../contexts/AuthContext';
+import { motion } from 'framer-motion';
+
+const drawerWidth = 260;
+
+const StyledToolbar = styled(Toolbar)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: theme.spacing(0, 3),
+  height: 60,
+  [theme.breakpoints.up('sm')]: {
+    height: 65,
+  },
+}));
+
+const StyledAppBar = styled(AppBar)(({ theme, visible }) => ({
+  zIndex: theme.zIndex.drawer + 1,
+  background: visible
+    ? 'rgba(255, 255, 255, 0.9)'
+    : 'rgba(255, 255, 255, 0.85)',
+  backdropFilter: 'blur(10px)',
+  boxShadow: visible
+    ? '0 1px 8px 0 rgba(0, 0, 0, 0.15)'
+    : '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+  color: theme.palette.text.primary,
+  borderBottom: `1px solid ${visible ? theme.palette.divider : 'transparent'}`,
+  position: 'fixed',
+  top: 0,
+  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+  transform: visible ? 'translateY(0)' : 'translateY(-100%)',
+}));
+
+const StyledDrawer = styled(Drawer)(({ theme }) => ({
+  width: drawerWidth,
+  flexShrink: 0,
+  '& .MuiDrawer-paper': {
+    width: drawerWidth,
+    boxSizing: 'border-box',
+    border: 'none',
+    background: alpha(theme.palette.background.paper, 0.95),
+    boxShadow: '0 0 20px rgba(0, 0, 0, 0.05)',
+    overflowX: 'hidden',
+    '&::-webkit-scrollbar': {
+      width: '6px',
+      backgroundColor: 'transparent',
+    },
+    '&::-webkit-scrollbar-thumb': {
+      backgroundColor: alpha(theme.palette.primary.main, 0.2),
+      borderRadius: '10px',
+    },
+    '&::-webkit-scrollbar-thumb:hover': {
+      backgroundColor: alpha(theme.palette.primary.main, 0.4),
+    },
+    '&::-webkit-scrollbar-track': {
+      backgroundColor: 'transparent',
+    },
+  },
+}));
+
+const StyledLogoContainer = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(1),
+}));
+
+const StyledListItem = styled(ListItem)(({ theme }) => ({
+  padding: theme.spacing(0.25, 1),
+  margin: theme.spacing(0.25, 1),
+  borderRadius: theme.shape.borderRadius,
+}));
+
+const StyledListItemButton = styled(ListItemButton)(({ theme, active }) => ({
+  borderRadius: theme.shape.borderRadius * 3,
+  padding: theme.spacing(0.8, 1.8),
+  transition: 'all 0.3s ease',
+  backgroundColor: active
+    ? alpha(theme.palette.primary.main, 0.12)
+    : 'transparent',
+  '&:hover': {
+    backgroundColor: active
+      ? alpha(theme.palette.primary.main, 0.18)
+      : alpha(theme.palette.primary.main, 0.08),
+    transform: 'translateY(-2px)',
+    boxShadow: active ? '0 4px 8px rgba(0, 0, 0, 0.05)' : 'none',
+  },
+}));
+
+const StyledListItemIcon = styled(ListItemIcon)(({ theme, active }) => ({
+  minWidth: 40,
+  color: active ? theme.palette.primary.main : theme.palette.text.secondary,
+}));
+
+const StyledListItemText = styled(ListItemText)(({ theme, active }) => ({
+  '& .MuiTypography-root': {
+    fontWeight: active ? 600 : 400,
+    fontSize: '0.95rem',
+    color: active ? theme.palette.primary.main : theme.palette.text.primary,
+  },
+}));
+
+const NavSection = styled(Box)(({ theme }) => ({
+  padding: theme.spacing(0.75, 1),
+  marginBottom: theme.spacing(0.5),
+  '& .MuiTypography-root': {
+    fontSize: '0.7rem',
+    fontWeight: 600,
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+    color: theme.palette.text.secondary,
+    opacity: 0.7,
+  },
+}));
 
 const Layout = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [headerVisible, setHeaderVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const location = useLocation();
+  const { user, logout } = useAuth();
+
+  // Control header visibility on scroll
+  useEffect(() => {
+    const controlHeader = () => {
+      const currentScrollY = window.scrollY;
+      const scrollDifference = Math.abs(currentScrollY - lastScrollY);
+
+      // Only trigger header change if scroll amount is significant
+      if (scrollDifference < 10) return;
+
+      if (currentScrollY < 30) {
+        // Always show header near the top of the page
+        setHeaderVisible(true);
+      } else if (currentScrollY > lastScrollY) {
+        // Scrolling down - hide header
+        setHeaderVisible(false);
+      } else {
+        // Scrolling up - show header
+        setHeaderVisible(true);
+      }
+
+      setLastScrollY(currentScrollY);
+    };
+
+    const throttledControlHeader = () => {
+      // Throttle the scroll events for better performance
+      if (!window.headerScrollTimeout) {
+        window.headerScrollTimeout = setTimeout(() => {
+          controlHeader();
+          window.headerScrollTimeout = null;
+        }, 100);
+      }
+    };
+
+    window.addEventListener('scroll', throttledControlHeader);
+
+    return () => {
+      window.removeEventListener('scroll', throttledControlHeader);
+      clearTimeout(window.headerScrollTimeout);
+      window.headerScrollTimeout = null;
+    };
+  }, [lastScrollY]);
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
+  const handleCloseDrawer = () => {
+    if (isMobile) {
+      setMobileOpen(false);
+    }
+  };
+
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    handleMenuClose();
+    logout();
+  };
+
+  const userType = user?.type || 'patient';
+  const isPatient = userType === 'patient';
+
+  const navigationItems = [
+    {
+      text: isPatient ? 'Dashboard' : 'Family Dashboard',
+      icon: <HomeOutlinedIcon />,
+      path: isPatient ? '/patient/dashboard' : '/family/dashboard',
+    },
+    {
+      text: 'Timeline',
+      icon: <TimelineOutlinedIcon />,
+      path: isPatient
+        ? '/patient/dashboard/timeline'
+        : '/family/dashboard/timeline',
+    },
+    {
+      text: 'Add Memory',
+      icon: <AddPhotoAlternateOutlinedIcon />,
+      path: '/add-memory',
+    },
+    {
+      text: 'Breathing Exercise',
+      icon: <SpaOutlinedIcon />,
+      path: '/breathing-game',
+    },
+    {
+      text: 'Help Center',
+      icon: <HelpOutlineOutlinedIcon />,
+      path: '/help',
+    },
+    {
+      text: 'Settings',
+      icon: <SettingsOutlinedIcon />,
+      path: '/settings',
+    },
+  ];
+
+  const drawer = (
+    <Box
+      sx={{
+        mt: { xs: 0, md: 1 },
+        py: 0.5,
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+      <Box sx={{ px: 3, mb: 1, display: { xs: 'block', md: 'none' } }}>
+        <Typography
+          variant='h5'
+          component={RouterLink}
+          to='/'
+          sx={{
+            fontWeight: 700,
+            textDecoration: 'none',
+            color: 'inherit',
+            display: 'flex',
+            alignItems: 'center',
+          }}>
+          <span
+            style={{
+              fontFamily: '"Playfair Display", serif',
+              fontWeight: 800,
+              color: theme.palette.primary.main,
+            }}>
+            Memo
+          </span>
+          <span style={{ fontFamily: 'Roboto, sans-serif', fontWeight: 500 }}>
+            Bloom
+          </span>
+        </Typography>
+      </Box>
+
+      <Divider sx={{ mb: 0.5, opacity: 0.6 }} />
+
+      {/* Main Navigation */}
+      <NavSection>
+        <Typography sx={{ px: 3, mb: 0.5 }}>Main</Typography>
+      </NavSection>
+
+      <List component='nav' sx={{ px: 1 }}>
+        {navigationItems.slice(0, 3).map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <StyledListItem key={item.text} disablePadding>
+              <StyledListItemButton
+                component={RouterLink}
+                to={item.path}
+                onClick={handleCloseDrawer}
+                active={isActive ? 1 : 0}>
+                <StyledListItemIcon active={isActive ? 1 : 0}>
+                  {item.icon}
+                </StyledListItemIcon>
+                <StyledListItemText
+                  active={isActive ? 1 : 0}
+                  primary={item.text}
+                />
+              </StyledListItemButton>
+            </StyledListItem>
+          );
+        })}
+      </List>
+
+      {/* Support Features */}
+      <NavSection>
+        <Typography sx={{ px: 3, mb: 0.5 }}>Support</Typography>
+      </NavSection>
+
+      <List component='nav' sx={{ px: 1 }}>
+        {navigationItems.slice(3).map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <StyledListItem key={item.text} disablePadding>
+              <StyledListItemButton
+                component={RouterLink}
+                to={item.path}
+                onClick={handleCloseDrawer}
+                active={isActive ? 1 : 0}>
+                <StyledListItemIcon active={isActive ? 1 : 0}>
+                  {item.icon}
+                </StyledListItemIcon>
+                <StyledListItemText
+                  active={isActive ? 1 : 0}
+                  primary={item.text}
+                />
+              </StyledListItemButton>
+            </StyledListItem>
+          );
+        })}
+      </List>
+
+      <Box sx={{ mt: 'auto', px: 3, pb: 2 }}>
+        <Divider sx={{ my: 1, opacity: 0.6 }} />
+        {user && (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              mb: 2,
+              px: 2,
+              py: 1.5,
+              borderRadius: 3,
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                backgroundColor: alpha(theme.palette.primary.main, 0.08),
+              },
+            }}>
+            <Avatar
+              sx={{
+                bgcolor: theme.palette.primary.main,
+                mr: 2,
+                width: 40,
+                height: 40,
+                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+              }}>
+              {user.name?.charAt(0) || 'U'}
+            </Avatar>
+            <Box sx={{ overflow: 'hidden' }}>
+              <Typography variant='subtitle2' noWrap sx={{ fontWeight: 600 }}>
+                {user.name}
+              </Typography>
+              <Typography variant='caption' color='text.secondary' noWrap>
+                {user.email}
+              </Typography>
+            </Box>
+          </Box>
+        )}
+        <Button
+          fullWidth
+          variant='outlined'
+          color='primary'
+          startIcon={<LogoutIcon />}
+          onClick={logout}
+          sx={{
+            borderRadius: 3,
+            mt: 1,
+            py: 1.2,
+            textTransform: 'none',
+            fontWeight: 500,
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+            '&:hover': {
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+              transform: 'translateY(-2px)',
+            },
+            transition: 'all 0.3s ease',
+          }}>
+          Logout
+        </Button>
+      </Box>
+    </Box>
+  );
+
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <Navbar />
-      <Toolbar /> {/* This creates space below the fixed navbar */}
-      <Container
+    <Box
+      sx={{
+        display: 'flex',
+        minHeight: '100vh',
+        bgcolor: 'background.default',
+      }}>
+      <CssBaseline />
+      <StyledAppBar visible={headerVisible}>
+        <StyledToolbar>
+          <StyledLogoContainer>
+            <IconButton
+              color='inherit'
+              aria-label='open drawer'
+              edge='start'
+              onClick={handleDrawerToggle}
+              sx={{ mr: 2, display: { md: 'none' } }}>
+              <MenuIcon />
+            </IconButton>
+            <Typography
+              variant='h5'
+              component={RouterLink}
+              to='/'
+              sx={{
+                fontWeight: 700,
+                textDecoration: 'none',
+                color: 'inherit',
+                display: { xs: 'none', md: 'flex' },
+                alignItems: 'center',
+              }}>
+              <span
+                style={{
+                  fontFamily: '"Playfair Display", serif',
+                  fontWeight: 800,
+                  color: theme.palette.primary.main,
+                }}>
+                Memo
+              </span>
+              <span
+                style={{ fontFamily: 'Roboto, sans-serif', fontWeight: 500 }}>
+                Bloom
+              </span>
+            </Typography>
+          </StyledLogoContainer>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Tooltip title='Add Memory'>
+              <IconButton
+                component={RouterLink}
+                to='/add-memory'
+                color='primary'
+                sx={{
+                  display: { xs: 'flex', md: 'none' },
+                  bgcolor: alpha(theme.palette.primary.main, 0.1),
+                  '&:hover': {
+                    bgcolor: alpha(theme.palette.primary.main, 0.2),
+                  },
+                }}>
+                <AddPhotoAlternateOutlinedIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title='Account settings'>
+              <IconButton
+                onClick={handleMenuOpen}
+                size='small'
+                sx={{
+                  ml: 1,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 2,
+                  bgcolor: 'background.paper',
+                  '&:hover': {
+                    bgcolor: alpha(theme.palette.primary.main, 0.05),
+                  },
+                }}
+                aria-controls={Boolean(anchorEl) ? 'account-menu' : undefined}
+                aria-haspopup='true'
+                aria-expanded={Boolean(anchorEl) ? 'true' : undefined}>
+                <Avatar
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    bgcolor: theme.palette.primary.main,
+                  }}>
+                  {user?.name?.charAt(0) || 'U'}
+                </Avatar>
+              </IconButton>
+            </Tooltip>
+          </Box>
+
+          <Menu
+            anchorEl={anchorEl}
+            id='account-menu'
+            open={Boolean(anchorEl)}
+            onClose={handleMenuClose}
+            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+            PaperProps={{
+              elevation: 2,
+              sx: {
+                overflow: 'visible',
+                borderRadius: 2,
+                mt: 1.5,
+                width: 220,
+                '&:before': {
+                  content: '""',
+                  display: 'block',
+                  position: 'absolute',
+                  top: 0,
+                  right: 14,
+                  width: 10,
+                  height: 10,
+                  bgcolor: 'background.paper',
+                  transform: 'translateY(-50%) rotate(45deg)',
+                  zIndex: 0,
+                },
+              },
+            }}>
+            <Box sx={{ pt: 2, pb: 1, px: 2 }}>
+              <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
+                {user?.name}
+              </Typography>
+              <Typography variant='body2' color='text.secondary'>
+                {user?.email}
+              </Typography>
+            </Box>
+            <Divider />
+            <MenuItem
+              component={RouterLink}
+              to='/settings'
+              onClick={handleMenuClose}>
+              <ListItemIcon>
+                <PersonOutlineIcon fontSize='small' />
+              </ListItemIcon>
+              <Typography variant='body2'>Account Settings</Typography>
+            </MenuItem>
+            <MenuItem onClick={handleLogout}>
+              <ListItemIcon>
+                <LogoutIcon fontSize='small' />
+              </ListItemIcon>
+              <Typography variant='body2'>Logout</Typography>
+            </MenuItem>
+          </Menu>
+        </StyledToolbar>
+      </StyledAppBar>
+
+      <Box component='nav'>
+        {isMobile ? (
+          <Drawer
+            variant='temporary'
+            open={mobileOpen}
+            onClose={handleDrawerToggle}
+            ModalProps={{
+              keepMounted: true, // Better open performance on mobile.
+            }}
+            sx={{
+              display: { xs: 'block', md: 'none' },
+              '& .MuiDrawer-paper': {
+                width: drawerWidth,
+                boxSizing: 'border-box',
+              },
+            }}>
+            {drawer}
+          </Drawer>
+        ) : (
+          <StyledDrawer
+            variant='permanent'
+            sx={{
+              display: { xs: 'none', md: 'block' },
+            }}
+            open>
+            {drawer}
+          </StyledDrawer>
+        )}
+      </Box>
+
+      <Box
         component='main'
-        sx={{ flexGrow: 1, py: 4, px: { xs: 2, md: 3 } }}>
-        <Outlet /> {/* This renders the child routes */}
-      </Container>
-      <Footer />
+        sx={{
+          flexGrow: 1,
+          p: 0,
+          width: { md: `calc(100% - ${drawerWidth}px)` },
+          minHeight: '100vh',
+          pt: { xs: '60px', sm: '65px' },
+          transition: 'padding-top 0.3s ease',
+        }}>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          style={{ minHeight: '100%' }}>
+          <Outlet />
+        </motion.div>
+      </Box>
     </Box>
   );
 };

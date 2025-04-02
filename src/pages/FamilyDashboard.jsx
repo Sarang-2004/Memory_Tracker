@@ -1,432 +1,541 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   Box,
   Typography,
-  Button,
-  Container,
   Grid,
   Paper,
+  Button,
+  Container,
   Card,
   CardContent,
   IconButton,
-  Divider,
   Avatar,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
+  Divider,
+  Stack,
+  Chip,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import TimelineIcon from '@mui/icons-material/Timeline';
-import MessageIcon from '@mui/icons-material/Message';
-import PeopleIcon from '@mui/icons-material/People';
-import PersonIcon from '@mui/icons-material/Person';
-import { MemoryTimeline, GroupCodeDisplay } from '../components';
+import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import MoodIcon from '@mui/icons-material/Mood';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
+import { useAuth } from '../contexts/AuthContext';
+import { MemoryCarousel } from '../components';
+import { alpha } from '@mui/material/styles';
+import catImage from '../assets/cat.jpg';
 
 const FamilyDashboard = () => {
   const navigate = useNavigate();
-  const [showGroupCode, setShowGroupCode] = useState(false);
+  const { user } = useAuth();
 
-  // Mock user data
+  // Create a combined userData object with defaults and auth data
   const userData = {
-    name: 'John Smith',
-    relation: 'Son',
-    patientName: 'Alice Johnson',
-    lastActive: '2 hours ago',
-    totalMemories: 24,
-    recentActivity: [
+    name: user?.name || 'Family Member',
+    email: user?.email || 'family@example.com',
+    patientName: user?.patientName || 'John Doe',
+    relation: user?.relation || 'Caretaker',
+    lastActive: user?.lastActive || '2 days ago',
+    recentActivities: [
       {
         id: 1,
         type: 'memory_added',
-        title: 'Added a new photo memory',
-        time: '3 days ago',
+        title: 'Added a new photo',
+        date: '2 hours ago',
       },
       {
         id: 2,
-        type: 'voice_recorded',
-        title: 'Recorded a voice memory',
-        time: '1 week ago',
+        type: 'routine_completed',
+        title: 'Completed morning routine',
+        date: 'Yesterday',
       },
       {
         id: 3,
-        type: 'location_visited',
-        title: 'Visited the park',
-        time: '2 weeks ago',
+        type: 'event_scheduled',
+        title: 'Doctor appointment scheduled',
+        date: '3 days ago',
       },
     ],
+    ...user, // Include any other properties from auth
   };
 
-  const handleAddMemory = () => {
-    navigate('/add-memory');
-  };
-
-  const handleToggleGroupCode = () => {
-    setShowGroupCode(!showGroupCode);
-  };
-
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
+  const memories = user?.memories || [
+    {
+      id: 1,
+      title: 'Beach Day',
+      description: 'A wonderful day at Malibu Beach with family',
+      date: 'June 15, 2023',
+      content: catImage,
+      location: 'Malibu, CA',
+      tags: ['family', 'beach', 'summer'],
+      reactions: 5,
+      type: 'photo',
     },
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        type: 'spring',
-        stiffness: 100,
-      },
+    {
+      id: 2,
+      title: 'Birthday Celebration',
+      description: "Dad's 65th birthday with all the grandchildren",
+      date: 'May 2, 2023',
+      content: catImage,
+      location: 'Home',
+      tags: ['birthday', 'family', 'celebration'],
+      reactions: 8,
+      type: 'photo',
     },
-  };
+    {
+      id: 3,
+      title: 'Garden Visit',
+      description: 'Visiting the Botanical Gardens on a sunny day',
+      date: 'April 10, 2023',
+      content: catImage,
+      location: 'Botanical Gardens',
+      tags: ['nature', 'garden', 'spring'],
+      reactions: 3,
+      type: 'photo',
+    },
+    {
+      id: 4,
+      title: "Dad's Favorite Recipe",
+      description: 'The apple pie recipe that dad always loved to make',
+      date: 'March 20, 2023',
+      content:
+        'This apple pie recipe has been in our family for generations. Dad always said the secret was adding a pinch of nutmeg and using cold butter in the crust.',
+      location: 'Home',
+      tags: ['recipe', 'food', 'memory'],
+      reactions: 6,
+      type: 'text',
+    },
+    {
+      id: 5,
+      title: "Dad's Story About His Childhood",
+      description: 'A recording of dad talking about growing up on the farm',
+      date: 'February 15, 2023',
+      content: 'audio-recording.mp3',
+      location: 'Living Room',
+      tags: ['story', 'childhood', 'history'],
+      reactions: 7,
+      type: 'voice',
+    },
+  ];
 
   return (
-    <Container maxWidth='lg' sx={{ mt: 2, mb: 4 }}>
-      <motion.div
-        variants={containerVariants}
-        initial='hidden'
-        animate='visible'>
-        {/* Header */}
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            mb: 6,
-          }}>
-          <Typography
-            variant='h4'
-            component='h1'
-            gutterBottom
-            sx={{
-              textAlign: 'center',
-              mb: 2,
-            }}>
-            <span
-              style={{
-                fontFamily: '"Playfair Display", serif',
-                fontWeight: 800,
-              }}>
-              Memo
-            </span>
-            <span
-              style={{
-                fontFamily: 'Roboto, sans-serif',
-                fontWeight: 400,
-              }}>
-              Bloom
-            </span>
-            <span style={{ fontWeight: 400 }}> Family View</span>
-          </Typography>
-
-          <Typography
-            variant='body1'
-            color='text.secondary'
-            sx={{
-              mb: 5,
-              textAlign: 'center',
-              maxWidth: '600px',
-              mx: 'auto',
-            }}>
-            Stay connected and contribute to your loved one's memory collection.
-          </Typography>
-        </Box>
-
+    <Container maxWidth='lg' sx={{ py: 4 }}>
+      <Grid container spacing={4}>
         {/* Welcome Section */}
-        <motion.div variants={itemVariants}>
+        <Grid item xs={12}>
           <Paper
             elevation={2}
+            component={motion.div}
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
             sx={{
               p: { xs: 3, md: 4 },
-              mb: 5,
               borderRadius: 3,
-              background: `linear-gradient(90deg, ${(theme) =>
-                theme.palette.primary.light} 0%, ${(theme) =>
-                theme.palette.primary.main} 100%)`,
+              background: `linear-gradient(120deg, ${(theme) =>
+                theme.palette.secondary.light} 0%, ${(theme) =>
+                theme.palette.secondary.main} 100%)`,
               color: 'white',
+              position: 'relative',
+              overflow: 'hidden',
             }}>
-            <Grid container spacing={3} alignItems='center'>
+            <Box
+              sx={{
+                position: 'absolute',
+                top: -100,
+                right: -100,
+                width: 300,
+                height: 300,
+                borderRadius: '50%',
+                background: 'rgba(255, 255, 255, 0.1)',
+                zIndex: 0,
+              }}
+            />
+            <Box
+              sx={{
+                position: 'absolute',
+                bottom: -80,
+                left: -80,
+                width: 200,
+                height: 200,
+                borderRadius: '50%',
+                background: 'rgba(255, 255, 255, 0.05)',
+                zIndex: 0,
+              }}
+            />
+            <Grid
+              container
+              spacing={3}
+              alignItems='center'
+              sx={{ position: 'relative', zIndex: 1 }}>
               <Grid item xs={12} md={8}>
                 <Typography variant='h4' component='h1' gutterBottom>
-                  Welcome, {userData.name}!
+                  Welcome back, {userData.name}
                 </Typography>
-                <Typography variant='body1' sx={{ lineHeight: 1.6 }}>
-                  You're connected to {userData.patientName}'s memory collection
-                  as their {userData.relation}. They were last active{' '}
-                  {userData.lastActive}.
+                <Typography variant='subtitle1' sx={{ mb: 3, opacity: 0.9 }}>
+                  You're managing memories for {userData.patientName}. Last
+                  activity was {userData.lastActive}.
                 </Typography>
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                  <Button
+                    variant='contained'
+                    startIcon={<AddPhotoAlternateIcon />}
+                    onClick={() => navigate('/add-memory')}
+                    sx={{
+                      bgcolor: 'white',
+                      color: 'secondary.main',
+                      '&:hover': {
+                        bgcolor: 'rgba(255, 255, 255, 0.9)',
+                      },
+                      px: 3,
+                      py: 1,
+                      borderRadius: 2,
+                    }}>
+                    Add Memory
+                  </Button>
+                  <Button
+                    variant='outlined'
+                    color='inherit'
+                    startIcon={<CalendarTodayOutlinedIcon />}
+                    component={Link}
+                    to='/family/dashboard/timeline'
+                    sx={{
+                      borderColor: 'rgba(255, 255, 255, 0.5)',
+                      '&:hover': {
+                        borderColor: 'white',
+                        bgcolor: 'rgba(255, 255, 255, 0.1)',
+                      },
+                      px: 3,
+                      py: 1,
+                      borderRadius: 2,
+                    }}>
+                    View Timeline
+                  </Button>
+                </Box>
               </Grid>
-              <Grid
-                item
-                xs={12}
-                md={4}
-                sx={{ display: 'flex', justifyContent: { md: 'flex-end' } }}>
-                <Button
-                  component={motion.button}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  variant='contained'
-                  color='secondary'
-                  size='large'
-                  startIcon={<AddPhotoAlternateIcon />}
-                  onClick={handleAddMemory}
-                  sx={{ borderRadius: 8, px: 3, py: 1.5 }}>
-                  Add Memory
-                </Button>
+              <Grid item xs={12} md={4}>
+                <Stack spacing={1}>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 2,
+                      bgcolor: 'rgba(255, 255, 255, 0.15)',
+                      borderRadius: 2,
+                      backdropFilter: 'blur(10px)',
+                    }}>
+                    <Typography variant='body2' sx={{ fontWeight: 500 }}>
+                      {userData.patientName}'s Mood Today
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                      <MoodIcon sx={{ color: '#FFD700', mr: 1 }} />
+                      <Typography variant='body1'>Happy</Typography>
+                    </Box>
+                  </Paper>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 2,
+                      bgcolor: 'rgba(255, 255, 255, 0.15)',
+                      borderRadius: 2,
+                      backdropFilter: 'blur(10px)',
+                    }}>
+                    <Typography variant='body2' sx={{ fontWeight: 500 }}>
+                      Memories This Month
+                    </Typography>
+                    <Typography variant='h4' sx={{ mt: 1, fontWeight: 700 }}>
+                      7
+                    </Typography>
+                  </Paper>
+                </Stack>
               </Grid>
             </Grid>
           </Paper>
-        </motion.div>
+        </Grid>
 
-        {/* Quick Actions */}
-        <motion.div variants={itemVariants}>
-          <Typography
-            variant='h5'
-            component='h2'
-            gutterBottom
-            sx={{ mt: 5, mb: 3 }}>
-            Quick Actions
-          </Typography>
-          <Grid container spacing={4}>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card
-                component={motion.div}
-                whileHover={{ y: -5, boxShadow: 4 }}
-                sx={{ height: '100%' }}>
-                <CardContent
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                  }}
-                  onClick={handleAddMemory}>
-                  <AddPhotoAlternateIcon
-                    color='primary'
-                    sx={{ fontSize: 48, mb: 1 }}
-                  />
-                  <Typography variant='h6'>Add Memory</Typography>
-                  <Typography variant='body2' color='text.secondary'>
-                    Contribute a new memory to the collection
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            <Grid item xs={12} sm={6} md={3}>
-              <Card
-                component={motion.div}
-                whileHover={{ y: -5, boxShadow: 4 }}
-                sx={{ height: '100%' }}>
-                <CardContent
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => navigate('/family/dashboard/timeline')}>
-                  <TimelineIcon color='primary' sx={{ fontSize: 48, mb: 1 }} />
-                  <Typography variant='h6'>View Timeline</Typography>
-                  <Typography variant='body2' color='text.secondary'>
-                    Browse all memories in chronological order
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            <Grid item xs={12} sm={6} md={3}>
-              <Card
-                component={motion.div}
-                whileHover={{ y: -5, boxShadow: 4 }}
-                sx={{ height: '100%' }}>
-                <CardContent
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                  }}
-                  onClick={handleToggleGroupCode}>
-                  <PeopleIcon color='primary' sx={{ fontSize: 48, mb: 1 }} />
-                  <Typography variant='h6'>Invite Family</Typography>
-                  <Typography variant='body2' color='text.secondary'>
-                    Share access code with other family members
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            <Grid item xs={12} sm={6} md={3}>
-              <Card
-                component={motion.div}
-                whileHover={{ y: -5, boxShadow: 4 }}
-                sx={{ height: '100%' }}>
-                <CardContent
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => navigate('/help')}>
-                  <MessageIcon color='primary' sx={{ fontSize: 48, mb: 1 }} />
-                  <Typography variant='h6'>Support Resources</Typography>
-                  <Typography variant='body2' color='text.secondary'>
-                    Access caregiver resources and support
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-        </motion.div>
-
-        {/* Group Code Section (Collapsible) */}
-        {showGroupCode && (
+        {/* Memory Carousel - New Feature */}
+        <Grid item xs={12}>
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.5 }}>
-            <Paper elevation={2} sx={{ p: 3, my: 4, borderRadius: 3 }}>
-              <Typography variant='h5' component='h2' gutterBottom>
-                Family Access Code
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}>
+            <Box sx={{ mb: 4 }}>
+              <Typography
+                variant='h5'
+                gutterBottom
+                sx={{ ml: 1, fontWeight: 600 }}>
+                {userData.patientName}'s Memories
               </Typography>
-              <Typography variant='body2' paragraph>
-                Share this code with other family members so they can connect to{' '}
-                {userData.patientName}'s memory collection.
-              </Typography>
-              <GroupCodeDisplay />
-            </Paper>
-          </motion.div>
-        )}
-
-        {/* Recent Activity */}
-        <motion.div variants={itemVariants}>
-          <Typography
-            variant='h5'
-            component='h2'
-            gutterBottom
-            sx={{ mt: 4, mb: 2 }}>
-            Recent Activity
-          </Typography>
-          <Paper elevation={2} sx={{ p: 3, borderRadius: 3 }}>
-            <List>
-              {userData.recentActivity.map((activity) => (
-                <ListItem key={activity.id} alignItems='flex-start'>
-                  <ListItemAvatar>
-                    <Avatar sx={{ bgcolor: 'primary.main' }}>
-                      <PersonIcon />
-                    </Avatar>
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={activity.title}
-                    secondary={
-                      <Typography
-                        component='span'
-                        variant='body2'
-                        color='text.secondary'>
-                        {activity.time}
-                      </Typography>
-                    }
-                  />
-                </ListItem>
-              ))}
-            </List>
-          </Paper>
-        </motion.div>
-
-        {/* Shared Memories Timeline */}
-        <motion.div variants={itemVariants}>
-          <Typography
-            variant='h5'
-            component='h2'
-            gutterBottom
-            sx={{ mt: 4, mb: 2 }}>
-            Shared Memories
-          </Typography>
-          <Paper elevation={2} sx={{ p: 3, borderRadius: 3 }}>
-            <MemoryTimeline />
-            <Box sx={{ textAlign: 'center', mt: 2 }}>
-              <Button
-                variant='outlined'
-                color='primary'
-                endIcon={<TimelineIcon />}
-                onClick={() => navigate('/family/dashboard/timeline')}>
-                View Full Timeline
-              </Button>
+              <MemoryCarousel memories={memories} />
             </Box>
-          </Paper>
-        </motion.div>
+          </motion.div>
+        </Grid>
 
-        {/* Patient Status */}
-        <motion.div variants={itemVariants}>
-          <Typography
-            variant='h5'
-            component='h2'
-            gutterBottom
-            sx={{ mt: 4, mb: 2 }}>
-            Patient Status
-          </Typography>
+        {/* Recent Memories */}
+        <Grid item xs={12} md={8}>
           <Paper
             elevation={2}
+            component={motion.div}
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.1 }}
             sx={{
               p: 3,
               borderRadius: 3,
-              display: 'flex',
-              flexDirection: { xs: 'column', md: 'row' },
-              alignItems: { xs: 'stretch', md: 'center' },
-              justifyContent: 'space-between',
+              height: '100%',
+              transition: 'transform 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-5px)',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+              },
             }}>
             <Box
               sx={{
                 display: 'flex',
+                justifyContent: 'space-between',
                 alignItems: 'center',
-                mb: { xs: 2, md: 0 },
+                mb: 3,
               }}>
-              <Avatar
-                sx={{ width: 64, height: 64, mr: 2, bgcolor: 'primary.main' }}>
-                <PersonIcon fontSize='large' />
-              </Avatar>
-              <Box>
-                <Typography variant='h6'>{userData.patientName}</Typography>
-                <Typography variant='body2' color='text.secondary'>
-                  Last active: {userData.lastActive}
-                </Typography>
-              </Box>
+              <Typography variant='h5' component='h2'>
+                Recent Memories
+              </Typography>
+              <Button
+                endIcon={<ArrowForwardIcon />}
+                component={Link}
+                to='/family/dashboard/timeline'
+                sx={{ borderRadius: 2 }}>
+                View All
+              </Button>
             </Box>
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <Grid container spacing={3}>
+              {memories.slice(0, 3).map((memory) => (
+                <Grid item xs={12} sm={6} md={4} key={memory.id}>
+                  <Card
+                    component={motion.div}
+                    whileHover={{
+                      y: -10,
+                      boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
+                      transition: { duration: 0.3 },
+                    }}
+                    sx={{
+                      height: '100%',
+                      borderRadius: 2,
+                      overflow: 'hidden',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                    }}
+                    onClick={() => navigate(`/memory/${memory.id}`)}>
+                    {memory.type === 'photo' && (
+                      <Box sx={{ height: 140, overflow: 'hidden' }}>
+                        <img
+                          src={memory.content}
+                          alt={memory.title}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                          }}
+                        />
+                      </Box>
+                    )}
+                    {memory.type === 'text' && (
+                      <Box
+                        sx={{
+                          height: 140,
+                          bgcolor: alpha('#9c27b0', 0.1),
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}>
+                        <Typography
+                          variant='body2'
+                          color='text.secondary'
+                          sx={{ p: 2, fontStyle: 'italic' }}>
+                          "{memory.content.substring(0, 100)}..."
+                        </Typography>
+                      </Box>
+                    )}
+                    {memory.type === 'voice' && (
+                      <Box
+                        sx={{
+                          height: 140,
+                          bgcolor: alpha('#2196f3', 0.1),
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexDirection: 'column',
+                        }}>
+                        <IconButton
+                          sx={{
+                            bgcolor: alpha('#2196f3', 0.2),
+                            '&:hover': { bgcolor: alpha('#2196f3', 0.3) },
+                          }}>
+                          <svg width='24' height='24' viewBox='0 0 24 24'>
+                            <path
+                              fill='currentColor'
+                              d='M12,2A3,3 0 0,1 15,5V11A3,3 0 0,1 12,14A3,3 0 0,1 9,11V5A3,3 0 0,1 12,2Z'
+                            />
+                            <path
+                              fill='currentColor'
+                              d='M19,10C19,15 15.36,19 12,19C8.64,19 5,15 5,10H7A5,5 0 0,0 12,15A5,5 0 0,0 17,10H19Z'
+                            />
+                            <path
+                              fill='currentColor'
+                              d='M12,19V22H10V19H12M12,19V22H14V19H12'
+                            />
+                          </svg>
+                        </IconButton>
+                        <Typography variant='body2' sx={{ mt: 1 }}>
+                          Voice Recording
+                        </Typography>
+                      </Box>
+                    )}
+                    <CardContent>
+                      <Typography
+                        variant='h6'
+                        component='div'
+                        gutterBottom
+                        noWrap>
+                        {memory.title}
+                      </Typography>
+                      <Typography
+                        variant='body2'
+                        color='text.secondary'
+                        sx={{ mb: 1 }}>
+                        {memory.date}
+                      </Typography>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                        }}>
+                        <Chip
+                          size='small'
+                          label={memory.location}
+                          sx={{ borderRadius: 1 }}
+                        />
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <FavoriteIcon
+                            sx={{ fontSize: 16, mr: 0.5, color: 'error.light' }}
+                          />
+                          <Typography variant='body2' color='text.secondary'>
+                            {memory.reactions}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </Paper>
+        </Grid>
+
+        {/* Patient Activity */}
+        <Grid item xs={12} md={4}>
+          <Paper
+            elevation={2}
+            component={motion.div}
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            sx={{
+              p: 3,
+              borderRadius: 3,
+              height: '100%',
+              transition: 'transform 0.3s ease',
+              '&:hover': {
+                transform: 'translateY(-5px)',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+              },
+            }}>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                mb: 3,
+              }}>
+              <Typography variant='h5' component='h2'>
+                Recent Activity
+              </Typography>
+              <IconButton
+                size='small'
+                sx={{
+                  bgcolor: alpha('#f5f5f5', 0.8),
+                  '&:hover': { bgcolor: alpha('#f5f5f5', 1) },
+                }}>
+                <NotificationsNoneIcon />
+              </IconButton>
+            </Box>
+            <Stack spacing={2}>
+              {userData.recentActivities.map((activity) => (
+                <Card
+                  key={activity.id}
+                  variant='outlined'
+                  sx={{
+                    borderRadius: 2,
+                    boxShadow: 'none',
+                    '&:hover': {
+                      borderColor: 'primary.main',
+                      bgcolor: alpha('#f5f5f5', 0.5),
+                    },
+                  }}>
+                  <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 1.5,
+                      }}>
+                      <Box
+                        sx={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          bgcolor: alpha('#f5f5f5', 0.8),
+                          flexShrink: 0,
+                        }}>
+                        {activity.type === 'memory_added' ? (
+                          <AddPhotoAlternateIcon color='primary' />
+                        ) : activity.type === 'routine_completed' ? (
+                          <AccessTimeIcon color='success' />
+                        ) : (
+                          <CalendarTodayOutlinedIcon color='warning' />
+                        )}
+                      </Box>
+                      <Box sx={{ flexGrow: 1 }}>
+                        <Typography variant='body2' gutterBottom>
+                          {activity.title}
+                        </Typography>
+                        <Typography variant='caption' color='text.secondary'>
+                          {activity.date}
+                        </Typography>
+                      </Box>
+                      <IconButton size='small'>
+                        <MoreHorizIcon fontSize='small' />
+                      </IconButton>
+                    </Box>
+                  </CardContent>
+                </Card>
+              ))}
+            </Stack>
+            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
               <Button
                 variant='outlined'
-                startIcon={<MessageIcon />}
-                onClick={() => navigate('/help')}>
-                Support Resources
-              </Button>
-              <Button
-                variant='contained'
-                color='primary'
-                startIcon={<NotificationsIcon />}
-                onClick={() => navigate('/settings')}>
-                Notification Settings
+                endIcon={<ArrowForwardIcon />}
+                sx={{ borderRadius: 2 }}>
+                View All Activity
               </Button>
             </Box>
           </Paper>
-        </motion.div>
-      </motion.div>
+        </Grid>
+      </Grid>
     </Container>
   );
 };

@@ -11,6 +11,10 @@ import {
   CardContent,
   IconButton,
   Divider,
+  Stack,
+  Avatar,
+  CardMedia,
+  Chip,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
@@ -19,25 +23,104 @@ import TimelineIcon from '@mui/icons-material/Timeline';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import PeopleIcon from '@mui/icons-material/People';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
-import { MemoryTimeline, BreathingExercise } from '../components';
+import {
+  MemoryTimeline,
+  BreathingExercise,
+  MemoryCarousel,
+} from '../components';
+import { Link } from 'react-router-dom';
+import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import FamilyRestroomIcon from '@mui/icons-material/FamilyRestroom';
+import { useAuth } from '../contexts/AuthContext';
+import { styled, alpha } from '@mui/material/styles';
+import ModeEditOutlineOutlinedIcon from '@mui/icons-material/ModeEditOutlineOutlined';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
+import catImage from '../assets/cat.jpg';
 
 const PatientDashboard = () => {
   const navigate = useNavigate();
   const [showBreathingExercise, setShowBreathingExercise] = useState(false);
+  const { user } = useAuth();
 
-  // Mock user data
+  // Create a combined userData object with defaults and auth data
   const userData = {
-    name: 'Alice Johnson',
-    totalMemories: 24,
-    recentLocations: ['Home', 'Park', "Doctor's Office"],
-    familyMembers: 3,
+    name: user?.name || 'John Doe',
+    email: user?.email || 'john@example.com',
+    familyMembers: user?.familyMembers || [
+      { name: 'Mary (Daughter)', avatar: null },
+      { name: 'Robert (Son)', avatar: null },
+      { name: 'Emily (Granddaughter)', avatar: null },
+    ],
+    ...user, // Include any other properties from auth
   };
+
+  // Sample memories for demonstration
+  const memories = [
+    {
+      id: 1,
+      title: 'Beach Day',
+      description: 'A wonderful day at Malibu Beach with family',
+      date: 'June 15, 2023',
+      content: catImage,
+      location: 'Malibu, CA',
+      tags: ['family', 'beach', 'summer'],
+      type: 'photo',
+    },
+    {
+      id: 2,
+      title: 'Birthday Celebration',
+      description: 'My 65th birthday with all the grandchildren',
+      date: 'May 2, 2023',
+      content: catImage,
+      location: 'Home',
+      tags: ['birthday', 'family', 'celebration'],
+      type: 'photo',
+    },
+    {
+      id: 3,
+      title: 'Garden Visit',
+      description: 'Visiting the Botanical Gardens on a sunny day',
+      date: 'April 10, 2023',
+      content: catImage,
+      location: 'Botanical Gardens',
+      tags: ['nature', 'garden', 'spring'],
+      type: 'photo',
+    },
+    {
+      id: 4,
+      title: 'My Favorite Recipe',
+      description: 'The apple pie recipe that I learned from my mother',
+      date: 'March 20, 2023',
+      content:
+        'This apple pie recipe has been in our family for generations. I remember my mother teaching me how to make the perfect crust when I was just a little girl.',
+      location: 'Home Kitchen',
+      tags: ['recipe', 'food', 'memory'],
+      type: 'text',
+    },
+    {
+      id: 5,
+      title: 'Story About My Childhood',
+      description: 'A recording of me talking about growing up on the farm',
+      date: 'February 15, 2023',
+      content: 'audio-recording.mp3',
+      location: 'Living Room',
+      tags: ['story', 'childhood', 'history'],
+      type: 'voice',
+    },
+  ];
 
   const handleAddMemory = () => {
     navigate('/add-memory');
   };
 
-  const handleBreathingExercise = () => {
+  const handleViewMemory = (id) => {
+    navigate(`/memory/${id}`);
+  };
+
+  const toggleBreathingExercise = () => {
     setShowBreathingExercise(!showBreathingExercise);
   };
 
@@ -64,382 +147,498 @@ const PatientDashboard = () => {
     },
   };
 
+  const getGreetingMessage = () => {
+    const currentHour = new Date().getHours();
+    if (currentHour < 12) {
+      return 'Good morning!';
+    } else if (currentHour < 18) {
+      return 'Good afternoon!';
+    } else {
+      return 'Good evening!';
+    }
+  };
+
   return (
-    <Container maxWidth='lg' sx={{ mt: 2, mb: 4 }}>
-      <motion.div
-        variants={containerVariants}
-        initial='hidden'
-        animate='visible'>
-        {/* Header */}
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            mb: 6,
-          }}>
-          <Typography
-            variant='h4'
-            component='h1'
-            gutterBottom
-            sx={{
-              textAlign: 'center',
-              mb: 2,
-            }}>
-            <span
-              style={{
-                fontFamily: '"Playfair Display", serif',
-                fontWeight: 800,
+    <Container maxWidth='lg' sx={{ mt: { xs: 2, md: 4 }, mb: 6 }}>
+      <Grid container spacing={4}>
+        <Grid item xs={12}>
+          <motion.div variants={itemVariants}>
+            <Paper
+              elevation={2}
+              sx={{
+                p: { xs: 3, md: 4 },
+                mb: 5,
+                borderRadius: 3,
+                background: `linear-gradient(90deg, ${(theme) =>
+                  theme.palette.primary.light} 0%, ${(theme) =>
+                  theme.palette.primary.main} 100%)`,
+                color: 'white',
+                overflow: 'hidden',
+                position: 'relative',
               }}>
-              Memo
-            </span>
-            <span
-              style={{
-                fontFamily: 'Roboto, sans-serif',
-                fontWeight: 400,
-              }}>
-              Bloom
-            </span>
-            <span style={{ fontWeight: 400 }}> Dashboard</span>
-          </Typography>
-
-          <Typography
-            variant='body1'
-            color='text.secondary'
-            sx={{
-              mb: 5,
-              textAlign: 'center',
-              maxWidth: '600px',
-              mx: 'auto',
-            }}>
-            Welcome to your personal memory companion.
-          </Typography>
-        </Box>
-
-        {/* Welcome Section */}
-        <motion.div variants={itemVariants}>
-          <Paper
-            elevation={2}
-            sx={{
-              p: { xs: 3, md: 4 },
-              mb: 5,
-              borderRadius: 3,
-              background: `linear-gradient(90deg, ${(theme) =>
-                theme.palette.primary.light} 0%, ${(theme) =>
-                theme.palette.primary.main} 100%)`,
-              color: 'white',
-            }}>
-            <Grid container spacing={3} alignItems='center'>
-              <Grid item xs={12} md={8}>
-                <Typography variant='h4' component='h1' gutterBottom>
-                  Welcome back, {userData.name}!
-                </Typography>
-                <Typography variant='body1' sx={{ lineHeight: 1.6 }}>
-                  Today is a great day to capture new memories. You have{' '}
-                  <strong>{userData.totalMemories}</strong> memories in your
-                  collection.
-                </Typography>
-              </Grid>
-              <Grid
-                item
-                xs={12}
-                md={4}
-                sx={{ display: 'flex', justifyContent: { md: 'flex-end' } }}>
-                <Button
-                  component={motion.button}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  variant='contained'
-                  color='secondary'
-                  size='large'
-                  startIcon={<AddPhotoAlternateIcon />}
-                  onClick={handleAddMemory}
-                  sx={{ borderRadius: 8, px: 3, py: 1.5 }}>
-                  Add Memory
-                </Button>
-              </Grid>
-            </Grid>
-          </Paper>
-        </motion.div>
-
-        {/* Quick Actions */}
-        <motion.div variants={itemVariants}>
-          <Typography
-            variant='h5'
-            component='h2'
-            gutterBottom
-            sx={{ mt: 5, mb: 3 }}>
-            Quick Actions
-          </Typography>
-          <Grid container spacing={4}>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card
-                component={motion.div}
-                whileHover={{ y: -5, boxShadow: 4 }}
+              <Box
                 sx={{
-                  height: '100%',
-                  transition: 'all 0.3s ease-in-out',
-                }}>
-                <CardContent
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    py: 3,
-                    px: 2,
-                    height: '100%',
-                  }}
-                  onClick={handleAddMemory}>
-                  <AddPhotoAlternateIcon
-                    color='primary'
-                    sx={{ fontSize: 48, mb: 2 }}
-                  />
-                  <Typography variant='h6' sx={{ mb: 1 }}>
-                    Add Memory
+                  position: 'absolute',
+                  top: -20,
+                  right: -20,
+                  width: '200px',
+                  height: '200px',
+                  borderRadius: '50%',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  zIndex: 0,
+                }}
+              />
+              <Box
+                sx={{
+                  position: 'absolute',
+                  bottom: -40,
+                  left: -40,
+                  width: '150px',
+                  height: '150px',
+                  borderRadius: '50%',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  zIndex: 0,
+                }}
+              />
+              <Grid
+                container
+                spacing={3}
+                alignItems='center'
+                sx={{ position: 'relative', zIndex: 1 }}>
+                <Grid item xs={12} md={7}>
+                  <Typography
+                    variant='h4'
+                    component='h1'
+                    gutterBottom
+                    sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                    {getGreetingMessage()} {userData.name}
                   </Typography>
                   <Typography
-                    variant='body2'
-                    color='text.secondary'
-                    sx={{ lineHeight: 1.6 }}>
-                    Record a new photo, voice, or text memory
+                    variant='subtitle1'
+                    sx={{ mb: 3, opacity: 0.9, maxWidth: '600px' }}>
+                    Welcome to your personal memory dashboard. Explore your
+                    memories, add new ones, or take a moment to relax with
+                    breathing exercises.
                   </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            <Grid item xs={12} sm={6} md={3}>
-              <Card
-                component={motion.div}
-                whileHover={{ y: -5, boxShadow: 4 }}
-                sx={{ height: '100%' }}>
-                <CardContent
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                  }}
-                  onClick={handleBreathingExercise}>
-                  <SpaIcon color='primary' sx={{ fontSize: 48, mb: 1 }} />
-                  <Typography variant='h6'>Breathing Exercise</Typography>
-                  <Typography variant='body2' color='text.secondary'>
-                    Take a moment to relax and breathe
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            <Grid item xs={12} sm={6} md={3}>
-              <Card
-                component={motion.div}
-                whileHover={{ y: -5, boxShadow: 4 }}
-                sx={{ height: '100%' }}>
-                <CardContent
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => navigate('/timeline')}>
-                  <TimelineIcon color='primary' sx={{ fontSize: 48, mb: 1 }} />
-                  <Typography variant='h6'>View Timeline</Typography>
-                  <Typography variant='body2' color='text.secondary'>
-                    See all your memories in chronological order
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            <Grid item xs={12} sm={6} md={3}>
-              <Card
-                component={motion.div}
-                whileHover={{ y: -5, boxShadow: 4 }}
-                sx={{ height: '100%' }}>
-                <CardContent
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => navigate('/settings')}>
-                  <PeopleIcon color='primary' sx={{ fontSize: 48, mb: 1 }} />
-                  <Typography variant='h6'>Family Connections</Typography>
-                  <Typography variant='body2' color='text.secondary'>
-                    Manage your connected family members
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-
-            <Grid item xs={12} sm={6} md={3}>
-              <Card
-                component={motion.div}
-                whileHover={{ y: -5, boxShadow: 4 }}
-                sx={{ height: '100%', border: '2px solid #f8bbd0' }}>
-                <CardContent
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => navigate('/help')}>
-                  <NotificationsActiveIcon
-                    color='error'
-                    sx={{ fontSize: 48, mb: 1 }}
-                  />
-                  <Typography variant='h6'>Need Help?</Typography>
-                  <Typography variant='body2' color='text.secondary'>
-                    Emergency contacts, location sharing, and calming exercises
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-        </motion.div>
-
-        {/* Breathing Exercise Section (Collapsible) */}
-        {showBreathingExercise && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.5 }}>
-            <Paper elevation={2} sx={{ p: 3, my: 4, borderRadius: 3 }}>
-              <Typography variant='h5' component='h2' gutterBottom>
-                Breathing Exercise
-              </Typography>
-              <BreathingExercise />
+                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                    <Button
+                      variant='contained'
+                      color='secondary'
+                      startIcon={<AddPhotoAlternateIcon />}
+                      onClick={handleAddMemory}
+                      sx={{
+                        bgcolor: 'white',
+                        color: 'primary.main',
+                        '&:hover': {
+                          bgcolor: 'rgba(255, 255, 255, 0.9)',
+                        },
+                        px: 3,
+                        py: 1,
+                        borderRadius: 2,
+                      }}>
+                      Add Memory
+                    </Button>
+                    <Button
+                      variant='outlined'
+                      color='inherit'
+                      startIcon={<TimelineIcon />}
+                      component={Link}
+                      to='/patient/dashboard/timeline'
+                      sx={{
+                        borderColor: 'rgba(255, 255, 255, 0.5)',
+                        '&:hover': {
+                          borderColor: 'white',
+                          bgcolor: 'rgba(255, 255, 255, 0.1)',
+                        },
+                        px: 3,
+                        py: 1,
+                        borderRadius: 2,
+                      }}>
+                      View Timeline
+                    </Button>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} md={5}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      gap: 2,
+                      justifyContent: { xs: 'flex-start', md: 'flex-end' },
+                      mt: { xs: 3, md: 0 },
+                    }}>
+                    <Box
+                      sx={{
+                        bgcolor: 'rgba(255, 255, 255, 0.1)',
+                        p: 2,
+                        borderRadius: 3,
+                        width: { xs: '50%', sm: '140px' },
+                      }}>
+                      <Typography variant='h4' sx={{ fontWeight: 700 }}>
+                        {userData.familyMembers.length}
+                      </Typography>
+                      <Typography variant='body2'>Family Members</Typography>
+                    </Box>
+                  </Box>
+                </Grid>
+              </Grid>
             </Paper>
           </motion.div>
-        )}
+        </Grid>
 
-        {/* Recent Memories Timeline */}
-        <motion.div variants={itemVariants}>
-          <Typography
-            variant='h5'
-            component='h2'
-            gutterBottom
-            sx={{ mt: 4, mb: 2 }}>
-            Recent Memories
-          </Typography>
-          <Paper elevation={2} sx={{ p: 3, borderRadius: 3 }}>
-            <MemoryTimeline />
-            <Box sx={{ textAlign: 'center', mt: 2 }}>
-              <Button
-                variant='outlined'
-                color='primary'
-                endIcon={<TimelineIcon />}
-                onClick={() => navigate('/patient/dashboard/timeline')}>
-                View Full Timeline
-              </Button>
+        {/* Featured Memories Carousel - Shows all memory types */}
+        <Grid item xs={12}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}>
+            <Box sx={{ mb: 4 }}>
+              <Typography
+                variant='h5'
+                gutterBottom
+                sx={{ ml: 1, fontWeight: 600 }}>
+                Featured Memories
+              </Typography>
+              <MemoryCarousel memories={memories} />
             </Box>
-          </Paper>
-        </motion.div>
+          </motion.div>
+        </Grid>
 
-        {/* Stats Section */}
-        <motion.div variants={itemVariants}>
-          <Typography
-            variant='h5'
-            component='h2'
-            gutterBottom
-            sx={{ mt: 4, mb: 2 }}>
-            Your Memory Stats
-          </Typography>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={4}>
-              <Paper
-                elevation={2}
-                sx={{
-                  p: 3,
-                  borderRadius: 3,
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
-                <Typography
-                  variant='h3'
-                  component='div'
+        {/* Actions Section */}
+        <Grid item xs={12} md={4}>
+          <motion.div variants={itemVariants}>
+            <Paper
+              elevation={2}
+              sx={{
+                p: 3,
+                borderRadius: 3,
+                height: '100%',
+                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-5px)',
+                  boxShadow: '0 12px 20px rgba(0, 0, 0, 0.1)',
+                },
+              }}>
+              <Typography variant='h6' gutterBottom>
+                Quick Actions
+              </Typography>
+              <Divider sx={{ mb: 3 }} />
+              <Stack spacing={2}>
+                <Button
+                  variant='outlined'
                   color='primary'
-                  gutterBottom>
-                  {userData.totalMemories}
-                </Typography>
-                <Typography variant='h6' component='div'>
-                  Total Memories
-                </Typography>
-              </Paper>
-            </Grid>
-
-            <Grid item xs={12} md={4}>
-              <Paper
-                elevation={2}
-                sx={{
-                  p: 3,
-                  borderRadius: 3,
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                }}>
-                <Typography variant='h6' component='div' gutterBottom>
-                  Recent Locations
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <LocationOnIcon color='primary' sx={{ mr: 1 }} />
-                  <Typography variant='body1'>
-                    {userData.recentLocations.join(', ')}
-                  </Typography>
-                </Box>
-                <Button
-                  variant='text'
-                  size='small'
-                  sx={{ alignSelf: 'flex-end', mt: 'auto' }}
-                  onClick={() => navigate('/settings')}>
-                  Manage Locations
+                  startIcon={<AddPhotoAlternateIcon />}
+                  onClick={handleAddMemory}
+                  fullWidth
+                  sx={{
+                    justifyContent: 'flex-start',
+                    py: 1.5,
+                    borderRadius: 2,
+                  }}>
+                  Create New Memory
                 </Button>
-              </Paper>
-            </Grid>
-
-            <Grid item xs={12} md={4}>
-              <Paper
-                elevation={2}
-                sx={{
-                  p: 3,
-                  borderRadius: 3,
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                }}>
-                <Typography variant='h6' component='div' gutterBottom>
+                <Button
+                  variant='outlined'
+                  color='secondary'
+                  startIcon={<SpaIcon />}
+                  onClick={toggleBreathingExercise}
+                  fullWidth
+                  sx={{
+                    justifyContent: 'flex-start',
+                    py: 1.5,
+                    borderRadius: 2,
+                  }}>
+                  Breathing Exercise
+                </Button>
+                <Button
+                  variant='outlined'
+                  color='info'
+                  startIcon={<FamilyRestroomIcon />}
+                  fullWidth
+                  sx={{
+                    justifyContent: 'flex-start',
+                    py: 1.5,
+                    borderRadius: 2,
+                  }}>
                   Family Connections
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <PeopleIcon color='primary' sx={{ mr: 1 }} />
-                  <Typography variant='body1'>
-                    {userData.familyMembers} family members connected
-                  </Typography>
+                </Button>
+              </Stack>
+              {showBreathingExercise && (
+                <Box sx={{ mt: 3 }}>
+                  <BreathingExercise />
                 </Box>
+              )}
+            </Paper>
+          </motion.div>
+        </Grid>
+
+        {/* Recent Locations */}
+        <Grid item xs={12} md={4}>
+          <motion.div variants={itemVariants}>
+            <Paper
+              elevation={2}
+              sx={{
+                p: 3,
+                borderRadius: 3,
+                height: '100%',
+                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-5px)',
+                  boxShadow: '0 12px 20px rgba(0, 0, 0, 0.1)',
+                },
+              }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  mb: 2,
+                }}>
+                <Typography variant='h6'>Recent Locations</Typography>
+                <IconButton
+                  color='primary'
+                  size='small'
+                  sx={{
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                  }}>
+                  <LocationOnIcon />
+                </IconButton>
+              </Box>
+              <Divider sx={{ mb: 3 }} />
+              <Stack spacing={2}>
+                {userData.familyMembers.map((member) => (
+                  <Card
+                    key={member.name}
+                    variant='outlined'
+                    sx={{
+                      borderRadius: 2,
+                      boxShadow: 'none',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        borderColor: 'primary.main',
+                        bgcolor: (theme) =>
+                          alpha(theme.palette.primary.main, 0.05),
+                      },
+                    }}>
+                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                        }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Avatar
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              mr: 1,
+                              bgcolor: (theme) => theme.palette.primary.main,
+                              fontSize: '0.875rem',
+                            }}>
+                            {member.name.charAt(0)}
+                          </Avatar>
+                          <Box>
+                            <Typography variant='body1'>
+                              {member.name}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        <IconButton size='small'>
+                          <ArrowForwardIcon fontSize='small' />
+                        </IconButton>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                ))}
+              </Stack>
+            </Paper>
+          </motion.div>
+        </Grid>
+
+        {/* Family Members */}
+        <Grid item xs={12} md={4}>
+          <motion.div variants={itemVariants}>
+            <Paper
+              elevation={2}
+              sx={{
+                p: 3,
+                borderRadius: 3,
+                height: '100%',
+                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-5px)',
+                  boxShadow: '0 12px 20px rgba(0, 0, 0, 0.1)',
+                },
+              }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  mb: 2,
+                }}>
+                <Typography variant='h6'>Family Members</Typography>
+                <IconButton
+                  color='primary'
+                  size='small'
+                  sx={{
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                  }}>
+                  <PeopleIcon />
+                </IconButton>
+              </Box>
+              <Divider sx={{ mb: 3 }} />
+              <Stack spacing={2}>
+                {userData.familyMembers.map((member) => (
+                  <Card
+                    key={member.name}
+                    variant='outlined'
+                    sx={{
+                      borderRadius: 2,
+                      boxShadow: 'none',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        borderColor: 'primary.main',
+                        bgcolor: (theme) =>
+                          alpha(theme.palette.primary.main, 0.05),
+                      },
+                    }}>
+                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                        }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Avatar
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              mr: 1,
+                              bgcolor: (theme) => theme.palette.primary.main,
+                              fontSize: '0.875rem',
+                            }}>
+                            {member.name.charAt(0)}
+                          </Avatar>
+                          <Box>
+                            <Typography variant='body1'>
+                              {member.name}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        <IconButton size='small'>
+                          <ArrowForwardIcon fontSize='small' />
+                        </IconButton>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                ))}
                 <Button
                   variant='text'
                   size='small'
-                  sx={{ alignSelf: 'flex-end', mt: 'auto' }}
-                  onClick={() => navigate('/settings')}>
-                  Manage Connections
+                  sx={{ alignSelf: 'center', mt: 1 }}>
+                  Manage Family
                 </Button>
-              </Paper>
-            </Grid>
-          </Grid>
-        </motion.div>
-      </motion.div>
+              </Stack>
+            </Paper>
+          </motion.div>
+        </Grid>
+
+        {/* Recent Memories */}
+        <Grid item xs={12}>
+          <motion.div variants={itemVariants}>
+            <Paper
+              elevation={2}
+              sx={{
+                p: 3,
+                borderRadius: 3,
+                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-5px)',
+                  boxShadow: '0 12px 20px rgba(0, 0, 0, 0.1)',
+                },
+              }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  mb: 3,
+                }}>
+                <Typography variant='h6'>Recent Memories</Typography>
+                <Button
+                  variant='outlined'
+                  size='small'
+                  endIcon={<ArrowForwardIcon />}
+                  component={Link}
+                  to='/patient/dashboard/timeline'
+                  sx={{ borderRadius: 2 }}>
+                  View All
+                </Button>
+              </Box>
+              <Grid container spacing={3}>
+                {memories.slice(0, 3).map((memory) => (
+                  <Grid item xs={12} sm={6} md={4} key={memory.id}>
+                    <Card
+                      sx={{
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        borderRadius: 2,
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          transform: 'translateY(-5px)',
+                          boxShadow: (theme) =>
+                            `0 8px 16px ${alpha(
+                              theme.palette.primary.main,
+                              0.15
+                            )}`,
+                        },
+                      }}
+                      onClick={() => handleViewMemory(memory.id)}>
+                      <CardMedia
+                        component='img'
+                        height='140'
+                        image={memory.content}
+                        alt={memory.title}
+                      />
+                      <CardContent sx={{ flexGrow: 1 }}>
+                        <Typography variant='h6' component='div' gutterBottom>
+                          {memory.title}
+                        </Typography>
+                        <Typography
+                          variant='caption'
+                          color='text.secondary'
+                          sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                          <CalendarTodayOutlinedIcon
+                            fontSize='inherit'
+                            sx={{ mr: 0.5 }}
+                          />
+                          {memory.date}
+                        </Typography>
+                        <Typography
+                          variant='body2'
+                          color='text.secondary'
+                          sx={{
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                          }}>
+                          {memory.description}
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            </Paper>
+          </motion.div>
+        </Grid>
+      </Grid>
     </Container>
   );
 };
