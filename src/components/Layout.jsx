@@ -15,7 +15,7 @@ import {
   Typography,
   Button,
   useMediaQuery,
-  useTheme,
+  useTheme as useMuiTheme,
   Avatar,
   Menu,
   MenuItem,
@@ -34,7 +34,10 @@ import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import SpaOutlinedIcon from '@mui/icons-material/SpaOutlined';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
+import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { motion } from 'framer-motion';
 
 const drawerWidth = 260;
@@ -52,14 +55,20 @@ const StyledToolbar = styled(Toolbar)(({ theme }) => ({
 
 const StyledAppBar = styled(AppBar)(({ theme, visible }) => ({
   zIndex: theme.zIndex.drawer + 1,
-  background: visible
-    ? 'rgba(255, 255, 255, 0.9)'
-    : 'rgba(255, 255, 255, 0.85)',
+  background:
+    theme.palette.mode === 'dark'
+      ? alpha(theme.palette.background.paper, 0.9)
+      : 'rgba(255, 255, 255, 0.9)',
   backdropFilter: 'blur(10px)',
   boxShadow: visible
-    ? '0 1px 8px 0 rgba(0, 0, 0, 0.15)'
+    ? theme.palette.mode === 'dark'
+      ? '0 1px 8px 0 rgba(0, 0, 0, 0.3)'
+      : '0 1px 8px 0 rgba(0, 0, 0, 0.15)'
     : '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-  color: theme.palette.text.primary,
+  color:
+    theme.palette.mode === 'dark'
+      ? theme.palette.primary.main
+      : theme.palette.text.primary,
   borderBottom: `1px solid ${visible ? theme.palette.divider : 'transparent'}`,
   position: 'fixed',
   top: 0,
@@ -74,8 +83,14 @@ const StyledDrawer = styled(Drawer)(({ theme }) => ({
     width: drawerWidth,
     boxSizing: 'border-box',
     border: 'none',
-    background: alpha(theme.palette.background.paper, 0.95),
-    boxShadow: '0 0 20px rgba(0, 0, 0, 0.05)',
+    background:
+      theme.palette.mode === 'dark'
+        ? alpha(theme.palette.background.paper, 0.95)
+        : alpha(theme.palette.background.paper, 0.95),
+    boxShadow:
+      theme.palette.mode === 'dark'
+        ? '0 0 20px rgba(0, 0, 0, 0.2)'
+        : '0 0 20px rgba(0, 0, 0, 0.05)',
     overflowX: 'hidden',
     '&::-webkit-scrollbar': {
       width: '6px',
@@ -149,8 +164,9 @@ const NavSection = styled(Box)(({ theme }) => ({
 }));
 
 const Layout = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const muiTheme = useMuiTheme();
+  const { mode, toggleTheme } = useTheme();
+  const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [headerVisible, setHeaderVisible] = useState(true);
@@ -286,7 +302,7 @@ const Layout = () => {
             style={{
               fontFamily: '"Playfair Display", serif',
               fontWeight: 800,
-              color: theme.palette.primary.main,
+              color: muiTheme.palette.primary.main,
             }}>
             Memo
           </span>
@@ -367,12 +383,12 @@ const Layout = () => {
               borderRadius: 3,
               transition: 'all 0.3s ease',
               '&:hover': {
-                backgroundColor: alpha(theme.palette.primary.main, 0.08),
+                backgroundColor: alpha(muiTheme.palette.primary.main, 0.08),
               },
             }}>
             <Avatar
               sx={{
-                bgcolor: theme.palette.primary.main,
+                bgcolor: muiTheme.palette.primary.main,
                 mr: 2,
                 width: 40,
                 height: 40,
@@ -431,36 +447,49 @@ const Layout = () => {
               aria-label='open drawer'
               edge='start'
               onClick={handleDrawerToggle}
-              sx={{ mr: 2, display: { md: 'none' } }}>
+              sx={{ mr: 1, display: { md: 'none' } }}>
               <MenuIcon />
             </IconButton>
-            <Typography
-              variant='h5'
+            <Box
               component={RouterLink}
               to='/'
               sx={{
-                fontWeight: 700,
                 textDecoration: 'none',
-                color: 'inherit',
-                display: { xs: 'none', md: 'flex' },
+                display: 'flex',
                 alignItems: 'center',
+                color: mode === 'dark' ? 'primary.main' : 'inherit',
+                '&:hover': {
+                  opacity: 0.85,
+                },
               }}>
-              <span
-                style={{
-                  fontFamily: '"Playfair Display", serif',
-                  fontWeight: 800,
-                  color: theme.palette.primary.main,
-                }}>
-                Memo
-              </span>
-              <span
-                style={{ fontFamily: 'Roboto, sans-serif', fontWeight: 500 }}>
-                Bloom
-              </span>
-            </Typography>
+              <SpaOutlinedIcon sx={{ mr: 1, fontSize: 24 }} />
+              <Typography
+                variant='h6'
+                sx={{ fontWeight: 600, display: 'flex', alignItems: 'center' }}>
+                MemoBloom
+              </Typography>
+            </Box>
           </StyledLogoContainer>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            {/* Theme Toggle */}
+            <Tooltip
+              title={`Switch to ${mode === 'light' ? 'Dark' : 'Light'} Mode`}>
+              <IconButton
+                onClick={toggleTheme}
+                color='inherit'
+                sx={{
+                  mr: 1,
+                  color: mode === 'dark' ? 'primary.main' : 'text.secondary',
+                }}>
+                {mode === 'dark' ? (
+                  <LightModeOutlinedIcon />
+                ) : (
+                  <DarkModeOutlinedIcon />
+                )}
+              </IconButton>
+            </Tooltip>
+
             <Tooltip title='Add Memory'>
               <IconButton
                 component={RouterLink}
@@ -468,9 +497,9 @@ const Layout = () => {
                 color='primary'
                 sx={{
                   display: { xs: 'flex', md: 'none' },
-                  bgcolor: alpha(theme.palette.primary.main, 0.1),
+                  bgcolor: alpha(muiTheme.palette.primary.main, 0.1),
                   '&:hover': {
-                    bgcolor: alpha(theme.palette.primary.main, 0.2),
+                    bgcolor: alpha(muiTheme.palette.primary.main, 0.2),
                   },
                 }}>
                 <AddPhotoAlternateOutlinedIcon />
@@ -487,7 +516,7 @@ const Layout = () => {
                   borderRadius: 2,
                   bgcolor: 'background.paper',
                   '&:hover': {
-                    bgcolor: alpha(theme.palette.primary.main, 0.05),
+                    bgcolor: alpha(muiTheme.palette.primary.main, 0.05),
                   },
                 }}
                 aria-controls={Boolean(anchorEl) ? 'account-menu' : undefined}
@@ -495,9 +524,11 @@ const Layout = () => {
                 aria-expanded={Boolean(anchorEl) ? 'true' : undefined}>
                 <Avatar
                   sx={{
-                    width: 32,
-                    height: 32,
-                    bgcolor: theme.palette.primary.main,
+                    width: 36,
+                    height: 36,
+                    bgcolor: muiTheme.palette.primary.main,
+                    fontSize: '1rem',
+                    fontWeight: 600,
                   }}>
                   {user?.name?.charAt(0) || 'U'}
                 </Avatar>

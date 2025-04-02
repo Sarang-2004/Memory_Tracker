@@ -1,19 +1,21 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline, CircularProgress, Box } from '@mui/material';
-import theme from './theme';
 import './App.css';
 
 // Layout and Components
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 // Lazy load pages for better performance
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const PatientLogin = lazy(() => import('./pages/PatientLogin'));
 const FamilyLogin = lazy(() => import('./pages/FamilyLogin'));
+const PatientRegister = lazy(() => import('./pages/PatientRegister'));
+const FamilyRegister = lazy(() => import('./pages/FamilyRegister'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const PatientDashboard = lazy(() => import('./pages/PatientDashboard'));
 const FamilyDashboard = lazy(() => import('./pages/FamilyDashboard'));
 const PatientTimeline = lazy(() => import('./pages/PatientTimeline'));
@@ -39,8 +41,7 @@ const LoadingFallback = () => (
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
+    <ThemeProvider>
       <BrowserRouter>
         <AuthProvider>
           <Suspense fallback={<LoadingFallback />}>
@@ -49,6 +50,9 @@ function App() {
               <Route path='/' element={<LandingPage />} />
               <Route path='/patient/login' element={<PatientLogin />} />
               <Route path='/family/login' element={<FamilyLogin />} />
+              <Route path='/patient/register' element={<PatientRegister />} />
+              <Route path='/family/register' element={<FamilyRegister />} />
+              <Route path='/forgot-password' element={<ForgotPassword />} />
 
               {/* Protected routes with Layout */}
               <Route element={<Layout />}>

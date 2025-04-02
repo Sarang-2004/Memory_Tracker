@@ -1,7 +1,7 @@
 import { createTheme, responsiveFontSizes } from '@mui/material/styles';
 
-// Create a theme instance with accessibility and responsiveness in mind
-let theme = createTheme({
+// Create a light theme
+const lightTheme = {
   palette: {
     mode: 'light',
     primary: {
@@ -28,27 +28,49 @@ let theme = createTheme({
       disabled: '#959da5',
     },
     divider: 'rgba(0, 0, 0, 0.08)',
-    success: {
-      main: '#4caf50',
-      light: '#80e27e',
-      dark: '#087f23',
+  },
+};
+
+// Create a dark theme with improved contrast
+const darkTheme = {
+  palette: {
+    mode: 'dark',
+    primary: {
+      main: '#82a5ff', // Brighter and more visible blue
+      light: '#adc4ff',
+      dark: '#3d4db2',
+      contrastText: '#ffffff',
     },
-    info: {
-      main: '#2196f3',
-      light: '#64b6f7',
-      dark: '#0069c0',
+    secondary: {
+      main: '#ff85ab',
+      light: '#ffb7cf',
+      dark: '#c4366d',
+      contrastText: '#ffffff',
     },
-    warning: {
-      main: '#ff9800',
-      light: '#ffc947',
-      dark: '#c66900',
+    background: {
+      default: '#121212',
+      paper: '#1e1e1e',
+      card: '#252525',
+      subtle: '#2d2d2d',
     },
-    error: {
-      main: '#f44336',
-      light: '#ff7961',
-      dark: '#ba000d',
+    text: {
+      primary: '#ffffff', // Increased contrast for better readability
+      secondary: '#c5cdd7', // Brighter secondary text for better visibility
+      disabled: '#8b97a5', // Brighter disabled text
+    },
+    divider: 'rgba(255, 255, 255, 0.12)', // Slightly more visible dividers
+    action: {
+      active: '#ffffff', // Ensure active elements are clearly visible
+      hover: 'rgba(255, 255, 255, 0.1)',
+      selected: 'rgba(130, 165, 255, 0.16)', // Match with primary.main
+      disabled: 'rgba(255, 255, 255, 0.3)',
+      disabledBackground: 'rgba(255, 255, 255, 0.12)',
     },
   },
+};
+
+// Common theme settings for both light and dark
+const commonThemeSettings = {
   typography: {
     fontFamily: 'Roboto, sans-serif',
     h1: {
@@ -168,10 +190,10 @@ let theme = createTheme({
             height: '6px',
           },
           '&::-webkit-scrollbar-track': {
-            background: '#f1f1f1',
+            background: 'var(--scrollbar-track, #f1f1f1)',
           },
           '&::-webkit-scrollbar-thumb': {
-            backgroundColor: 'rgba(0,0,0,.2)',
+            backgroundColor: 'var(--scrollbar-thumb, rgba(0,0,0,.2))',
             borderRadius: '20px',
           },
         },
@@ -201,12 +223,6 @@ let theme = createTheme({
           '&:hover': {
             boxShadow: '0 4px 10px 0 rgba(0,0,0,0.12)',
           },
-        },
-        containedPrimary: {
-          background: 'linear-gradient(90deg, #5569ff 0%, #7b86ff 100%)',
-        },
-        containedSecondary: {
-          background: 'linear-gradient(90deg, #ff6b9b 0%, #ff9bc1 100%)',
         },
       },
     },
@@ -247,100 +263,22 @@ let theme = createTheme({
         },
       },
     },
-    MuiAppBar: {
-      styleOverrides: {
-        root: {
-          boxShadow: '0 1px 8px 0 rgba(0,0,0,0.05)',
-          backdropFilter: 'blur(8px)',
-        },
-      },
-    },
-    MuiGrid: {
-      styleOverrides: {
-        container: {
-          marginTop: 16,
-          marginBottom: 16,
-        },
-        item: {
-          paddingTop: 8,
-          paddingBottom: 8,
-        },
-      },
-    },
-    MuiTextField: {
-      styleOverrides: {
-        root: {
-          '& .MuiOutlinedInput-root': {
-            borderRadius: 8,
-            '& fieldset': {
-              borderColor: 'rgba(0, 0, 0, 0.12)',
-            },
-            '&:hover fieldset': {
-              borderColor: 'rgba(0, 0, 0, 0.24)',
-            },
-            '&.Mui-focused fieldset': {
-              borderColor: '#5569ff',
-            },
-          },
-        },
-      },
-    },
-    MuiListItem: {
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
-        },
-      },
-    },
-    MuiSwitch: {
-      styleOverrides: {
-        root: {
-          width: 42,
-          height: 26,
-          padding: 0,
-          '& .MuiSwitch-switchBase': {
-            padding: 0,
-            margin: 2,
-            transitionDuration: '300ms',
-            '&.Mui-checked': {
-              transform: 'translateX(16px)',
-              color: '#fff',
-              '& + .MuiSwitch-track': {
-                backgroundColor: '#5569ff',
-                opacity: 1,
-                border: 0,
-              },
-            },
-          },
-          '& .MuiSwitch-thumb': {
-            boxSizing: 'border-box',
-            width: 22,
-            height: 22,
-          },
-          '& .MuiSwitch-track': {
-            borderRadius: 26 / 2,
-            backgroundColor: '#E9E9EA',
-            opacity: 1,
-          },
-        },
-      },
-    },
   },
-});
-
-// Add responsive breakpoints
-theme.breakpoints.values = {
-  xs: 0,
-  sm: 600,
-  md: 960,
-  lg: 1280,
-  xl: 1920,
 };
 
-// Apply responsive font sizes
-theme = responsiveFontSizes(theme, {
-  breakpoints: ['xs', 'sm', 'md', 'lg', 'xl'],
-  factor: 1.2, // Lower factor for more gradual scaling
-});
+// Function to get the theme based on mode
+export const getAppTheme = (mode) => {
+  const themeOptions = mode === 'dark' ? darkTheme : lightTheme;
+
+  const theme = createTheme({
+    ...themeOptions,
+    ...commonThemeSettings,
+  });
+
+  return responsiveFontSizes(theme);
+};
+
+// Default theme with light mode
+let theme = getAppTheme('light');
 
 export default theme;

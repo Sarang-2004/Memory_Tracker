@@ -20,27 +20,38 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import catImage from '../assets/cat.jpg';
 
 // Update the navigation button styles to be lighter and more subtle
-const NavButton = ({ children, onClick, direction }) => (
-  <IconButton
-    onClick={onClick}
-    sx={{
-      position: 'absolute',
-      top: '50%',
-      transform: 'translateY(-50%)',
-      [direction === 'left' ? 'left' : 'right']: { xs: 4, sm: 16 },
-      zIndex: 2,
-      bgcolor: 'rgba(255, 255, 255, 0.6)',
-      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-      '&:hover': {
-        bgcolor: 'rgba(255, 255, 255, 0.8)',
-        transform: 'translateY(-50%) scale(1.05)',
-      },
-      transition: 'all 0.2s ease',
-      color: 'text.secondary',
-    }}>
-    {children}
-  </IconButton>
-);
+const NavButton = ({ children, onClick, direction }) => {
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
+
+  return (
+    <IconButton
+      onClick={onClick}
+      sx={{
+        position: 'absolute',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        [direction === 'left' ? 'left' : 'right']: { xs: 4, sm: 16 },
+        zIndex: 2,
+        bgcolor: isDarkMode
+          ? 'rgba(255, 255, 255, 0.2)'
+          : 'rgba(255, 255, 255, 0.6)',
+        boxShadow: isDarkMode
+          ? '0 2px 8px rgba(0, 0, 0, 0.2)'
+          : '0 2px 8px rgba(0, 0, 0, 0.08)',
+        '&:hover': {
+          bgcolor: isDarkMode
+            ? 'rgba(255, 255, 255, 0.3)'
+            : 'rgba(255, 255, 255, 0.8)',
+          transform: 'translateY(-50%) scale(1.05)',
+        },
+        transition: 'all 0.2s ease',
+        color: isDarkMode ? 'white' : 'text.secondary',
+      }}>
+      {children}
+    </IconButton>
+  );
+};
 
 const MemoryCarousel = ({
   memories = [],
@@ -119,6 +130,8 @@ const MemoryCarousel = ({
 
   // Render different content based on memory type
   const getMemoryContent = (memory) => {
+    const isDarkMode = theme.palette.mode === 'dark';
+
     switch (memory.type) {
       case 'photo':
         return (
@@ -154,7 +167,7 @@ const MemoryCarousel = ({
                   left: 0,
                   right: 0,
                   background:
-                    'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%)',
+                    'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%)',
                   padding: 3,
                   paddingTop: 6,
                   color: 'white',
@@ -169,14 +182,14 @@ const MemoryCarousel = ({
                   sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <CalendarTodayIcon
-                      sx={{ fontSize: 16, mr: 0.5, opacity: 0.7 }}
+                      sx={{ fontSize: 16, mr: 0.5, opacity: 0.9 }}
                     />
                     <Typography variant='body2'>{memory.date}</Typography>
                   </Box>
                   {memory.location && (
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <LocationOnIcon
-                        sx={{ fontSize: 16, mr: 0.5, opacity: 0.7 }}
+                        sx={{ fontSize: 16, mr: 0.5, opacity: 0.9 }}
                       />
                       <Typography variant='body2'>{memory.location}</Typography>
                     </Box>
@@ -195,12 +208,16 @@ const MemoryCarousel = ({
               display: 'flex',
               flexDirection: 'column',
               padding: 4,
-              background: `linear-gradient(135deg, ${alpha(
-                theme.palette.background.paper,
-                0.9
-              )} 0%, ${alpha(theme.palette.background.paper, 0.7)} 100%)`,
-              backdropFilter: 'blur(10px)',
-              position: 'relative',
+              background: isDarkMode
+                ? `linear-gradient(135deg, ${alpha(
+                    theme.palette.primary.dark,
+                    0.2
+                  )}, ${alpha(theme.palette.background.paper, 0.9)})`
+                : `linear-gradient(135deg, ${alpha(
+                    theme.palette.background.paper,
+                    0.9
+                  )}, ${alpha(theme.palette.primary.light, 0.2)})`,
+              color: theme.palette.text.primary,
             }}>
             <TextSnippetIcon
               sx={{
@@ -342,13 +359,16 @@ const MemoryCarousel = ({
   };
 
   return (
-    <Paper
+    <Box
       sx={{
         position: 'relative',
-        borderRadius: 3,
         overflow: 'hidden',
-        mb: 4,
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.07)',
+        width: '100%',
+        height: '100%',
+        bgcolor: (theme) =>
+          theme.palette.mode === 'dark'
+            ? alpha(theme.palette.background.paper, 0.7)
+            : '#fff',
       }}>
       {/* Previous button */}
       <NavButton onClick={goToPrevious} direction='left'>
@@ -359,8 +379,9 @@ const MemoryCarousel = ({
       <Box
         sx={{
           position: 'relative',
-          height: 400,
+          height: '100%',
           overflow: 'hidden',
+          width: '100%',
         }}>
         <AnimatePresence mode='wait'>
           <motion.div
@@ -412,9 +433,9 @@ const MemoryCarousel = ({
             component='button'
             onClick={() => goToDot(index)}
             sx={{
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
+              width: index === currentIndex ? 24 : 12,
+              height: 4,
+              borderRadius: '4px',
               border: 'none',
               bgcolor:
                 index === currentIndex ? 'white' : 'rgba(255, 255, 255, 0.5)',
@@ -422,13 +443,14 @@ const MemoryCarousel = ({
               padding: 0,
               transition: 'all 0.3s ease',
               '&:hover': {
-                transform: 'scale(1.3)',
+                bgcolor: 'white',
+                transform: 'scaleY(1.3)',
               },
             }}
           />
         ))}
       </Box>
-    </Paper>
+    </Box>
   );
 };
 

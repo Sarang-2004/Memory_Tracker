@@ -10,7 +10,6 @@ import {
   CardContent,
   CardMedia,
   CardActions,
-  useMediaQuery,
   useTheme,
 } from '@mui/material';
 import { motion } from 'framer-motion';
@@ -22,8 +21,6 @@ import SpaIcon from '@mui/icons-material/Spa';
 const LandingPage = () => {
   const navigate = useNavigate();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
 
   const handlePatientLogin = () => {
     navigate('/patient/login');
@@ -31,6 +28,14 @@ const LandingPage = () => {
 
   const handleFamilyLogin = () => {
     navigate('/family/login');
+  };
+
+  const handlePatientRegister = () => {
+    navigate('/patient/register');
+  };
+
+  const handleFamilyRegister = () => {
+    navigate('/family/register');
   };
 
   // Animation variants
@@ -190,7 +195,7 @@ const LandingPage = () => {
                     variant='contained'
                     color='secondary'
                     size='large'
-                    onClick={handlePatientLogin}
+                    onClick={handlePatientRegister}
                     sx={{
                       py: 1.5,
                       px: 4,
@@ -207,7 +212,7 @@ const LandingPage = () => {
                     whileTap={{ scale: 0.95 }}
                     variant='outlined'
                     size='large'
-                    onClick={handleFamilyLogin}
+                    onClick={handleFamilyRegister}
                     sx={{
                       py: 1.5,
                       px: 4,
@@ -223,6 +228,55 @@ const LandingPage = () => {
                     }}>
                     Family Connect
                   </Button>
+                </Box>
+
+                <Box
+                  sx={{
+                    display: 'flex',
+                    gap: 2,
+                    mt: 2,
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    justifyContent: { xs: 'center', md: 'flex-start' },
+                  }}>
+                  <Typography
+                    variant='body2'
+                    sx={{
+                      color: 'rgba(255,255,255,0.8)',
+                      textAlign: { xs: 'center', md: 'left' },
+                    }}>
+                    Already have an account?{' '}
+                    <Button
+                      onClick={handlePatientLogin}
+                      sx={{
+                        color: 'white',
+                        fontWeight: 'bold',
+                        textDecoration: 'underline',
+                        minWidth: 'auto',
+                        p: 0,
+                        '&:hover': {
+                          background: 'transparent',
+                          textDecoration: 'underline',
+                        },
+                      }}>
+                      Patient Login
+                    </Button>{' '}
+                    or{' '}
+                    <Button
+                      onClick={handleFamilyLogin}
+                      sx={{
+                        color: 'white',
+                        fontWeight: 'bold',
+                        textDecoration: 'underline',
+                        minWidth: 'auto',
+                        p: 0,
+                        '&:hover': {
+                          background: 'transparent',
+                          textDecoration: 'underline',
+                        },
+                      }}>
+                      Family Login
+                    </Button>
+                  </Typography>
                 </Box>
               </motion.div>
             </Grid>
@@ -610,7 +664,7 @@ const LandingPage = () => {
             variant='contained'
             color='primary'
             size='large'
-            onClick={handlePatientLogin}
+            onClick={handlePatientRegister}
             sx={{
               py: { xs: 1, sm: 1.5 },
               px: { xs: 3, sm: 4 },
@@ -618,9 +672,54 @@ const LandingPage = () => {
               width: { xs: '100%', sm: 'auto' },
               maxWidth: { xs: '300px', sm: 'none' },
               mx: 'auto',
+              mb: 2,
             }}>
             Get Started Now
           </Button>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: 2,
+              flexWrap: 'wrap',
+            }}>
+            <Button
+              onClick={handlePatientLogin}
+              sx={{
+                color: 'white',
+                fontWeight: 'bold',
+                textDecoration: 'underline',
+                '&:hover': {
+                  background: 'rgba(255,255,255,0.1)',
+                },
+              }}>
+              Patient Login
+            </Button>
+            <Button
+              onClick={handleFamilyLogin}
+              sx={{
+                color: 'white',
+                fontWeight: 'bold',
+                textDecoration: 'underline',
+                '&:hover': {
+                  background: 'rgba(255,255,255,0.1)',
+                },
+              }}>
+              Family Login
+            </Button>
+            <Button
+              onClick={handleFamilyRegister}
+              sx={{
+                color: 'white',
+                fontWeight: 'bold',
+                textDecoration: 'underline',
+                '&:hover': {
+                  background: 'rgba(255,255,255,0.1)',
+                },
+              }}>
+              Family Register
+            </Button>
+          </Box>
         </Container>
       </Box>
     </Box>

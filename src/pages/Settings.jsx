@@ -28,7 +28,10 @@ import PeopleIcon from '@mui/icons-material/People';
 import AccessibilityNewIcon from '@mui/icons-material/AccessibilityNew';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import SecurityIcon from '@mui/icons-material/Security';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import LightModeIcon from '@mui/icons-material/LightMode';
 import { AccessibilityControls, EmergencyContact } from '../components';
+import { useTheme } from '../contexts/ThemeContext';
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -38,6 +41,9 @@ const Settings = () => {
     message: '',
     severity: 'success',
   });
+
+  // Get theme from context
+  const { mode, toggleTheme } = useTheme();
 
   // Mock user data
   const [userData, setUserData] = useState({
@@ -197,6 +203,37 @@ const Settings = () => {
               <Typography variant='h6' gutterBottom>
                 Display Settings
               </Typography>
+
+              {/* Theme Toggle */}
+              <Box sx={{ mb: 3, display: 'flex', alignItems: 'center' }}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={mode === 'dark'}
+                      onChange={toggleTheme}
+                      color='primary'
+                    />
+                  }
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      {mode === 'dark' ? (
+                        <>
+                          <DarkModeIcon color='primary' />
+                          <Typography>Dark Mode</Typography>
+                        </>
+                      ) : (
+                        <>
+                          <LightModeIcon color='primary' />
+                          <Typography>Light Mode</Typography>
+                        </>
+                      )}
+                    </Box>
+                  }
+                />
+              </Box>
+
+              <Divider sx={{ my: 2 }} />
+
               <Box sx={{ mb: 4 }}>
                 <Typography id='font-size-slider' gutterBottom>
                   Font Size: {userData.fontSize}px
