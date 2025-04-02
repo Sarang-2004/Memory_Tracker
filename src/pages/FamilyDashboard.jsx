@@ -96,25 +96,71 @@ const FamilyDashboard = () => {
         variants={containerVariants}
         initial='hidden'
         animate='visible'>
+        {/* Header */}
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            mb: 6,
+          }}>
+          <Typography
+            variant='h4'
+            component='h1'
+            gutterBottom
+            sx={{
+              textAlign: 'center',
+              mb: 2,
+            }}>
+            <span
+              style={{
+                fontFamily: '"Playfair Display", serif',
+                fontWeight: 800,
+              }}>
+              Memo
+            </span>
+            <span
+              style={{
+                fontFamily: 'Roboto, sans-serif',
+                fontWeight: 400,
+              }}>
+              Bloom
+            </span>
+            <span style={{ fontWeight: 400 }}> Family View</span>
+          </Typography>
+
+          <Typography
+            variant='body1'
+            color='text.secondary'
+            sx={{
+              mb: 5,
+              textAlign: 'center',
+              maxWidth: '600px',
+              mx: 'auto',
+            }}>
+            Stay connected and contribute to your loved one's memory collection.
+          </Typography>
+        </Box>
+
         {/* Welcome Section */}
         <motion.div variants={itemVariants}>
           <Paper
             elevation={2}
             sx={{
-              p: 3,
-              mb: 4,
+              p: { xs: 3, md: 4 },
+              mb: 5,
               borderRadius: 3,
               background: `linear-gradient(90deg, ${(theme) =>
                 theme.palette.primary.light} 0%, ${(theme) =>
                 theme.palette.primary.main} 100%)`,
               color: 'white',
             }}>
-            <Grid container spacing={2} alignItems='center'>
+            <Grid container spacing={3} alignItems='center'>
               <Grid item xs={12} md={8}>
                 <Typography variant='h4' component='h1' gutterBottom>
                   Welcome, {userData.name}!
                 </Typography>
-                <Typography variant='body1'>
+                <Typography variant='body1' sx={{ lineHeight: 1.6 }}>
                   You're connected to {userData.patientName}'s memory collection
                   as their {userData.relation}. They were last active{' '}
                   {userData.lastActive}.
@@ -148,10 +194,10 @@ const FamilyDashboard = () => {
             variant='h5'
             component='h2'
             gutterBottom
-            sx={{ mt: 4, mb: 2 }}>
+            sx={{ mt: 5, mb: 3 }}>
             Quick Actions
           </Typography>
-          <Grid container spacing={3}>
+          <Grid container spacing={4}>
             <Grid item xs={12} sm={6} md={3}>
               <Card
                 component={motion.div}

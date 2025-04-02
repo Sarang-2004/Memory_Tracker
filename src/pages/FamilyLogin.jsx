@@ -93,10 +93,34 @@ const FamilyLogin = () => {
                 transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}>
                 <PeopleIcon color='primary' sx={{ fontSize: 60, mb: 2 }} />
               </motion.div>
-              <Typography variant='h4' component='h1' gutterBottom>
-                Family Login
+              <Typography
+                variant='h4'
+                component='h1'
+                gutterBottom
+                sx={{
+                  mb: 3,
+                  textAlign: 'center',
+                }}>
+                <span
+                  style={{
+                    fontFamily: '"Playfair Display", serif',
+                    fontWeight: 800,
+                  }}>
+                  Memo
+                </span>
+                <span
+                  style={{
+                    fontFamily: 'Roboto, sans-serif',
+                    fontWeight: 400,
+                  }}>
+                  Bloom
+                </span>
               </Typography>
-              <Typography variant='body1' color='text.secondary' align='center'>
+              <Typography
+                variant='body1'
+                color='text.secondary'
+                align='center'
+                sx={{ mb: 4, maxWidth: '400px', mx: 'auto' }}>
                 Welcome back! Please log in to access your family member's
                 memories.
               </Typography>

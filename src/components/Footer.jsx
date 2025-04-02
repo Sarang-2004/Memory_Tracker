@@ -46,8 +46,20 @@ const Footer = () => {
               transition={{ duration: 0.3 }}>
               <AccessibilityNewIcon sx={{ mr: 1 }} />
             </motion.div>
-            <Typography variant='h6' component='div'>
-              Memory Tracker
+            <Typography
+              variant='h6'
+              component='div'
+              sx={{
+                fontFamily: '"Playfair Display", serif',
+                fontWeight: 700,
+                fontSize: '1.2rem',
+                color: 'white',
+              }}>
+              <span style={{ fontWeight: 800 }}>Memo</span>
+              <span
+                style={{ fontWeight: 400, fontFamily: 'Roboto, sans-serif' }}>
+                Bloom
+              </span>
             </Typography>
           </Box>
 
@@ -75,7 +87,19 @@ const Footer = () => {
           </Box>
 
           <Typography variant='body2' color='white'>
-            © {currentYear} Memory Tracker. All rights reserved.
+            © {currentYear}{' '}
+            <span
+              style={{
+                fontFamily: '"Playfair Display", serif',
+                fontWeight: 700,
+              }}>
+              <span style={{ fontWeight: 800 }}>Memo</span>
+              <span
+                style={{ fontWeight: 400, fontFamily: 'Roboto, sans-serif' }}>
+                Bloom
+              </span>
+            </span>
+            . All rights reserved.
           </Typography>
         </Box>
 

@@ -70,25 +70,71 @@ const PatientDashboard = () => {
         variants={containerVariants}
         initial='hidden'
         animate='visible'>
+        {/* Header */}
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            mb: 6,
+          }}>
+          <Typography
+            variant='h4'
+            component='h1'
+            gutterBottom
+            sx={{
+              textAlign: 'center',
+              mb: 2,
+            }}>
+            <span
+              style={{
+                fontFamily: '"Playfair Display", serif',
+                fontWeight: 800,
+              }}>
+              Memo
+            </span>
+            <span
+              style={{
+                fontFamily: 'Roboto, sans-serif',
+                fontWeight: 400,
+              }}>
+              Bloom
+            </span>
+            <span style={{ fontWeight: 400 }}> Dashboard</span>
+          </Typography>
+
+          <Typography
+            variant='body1'
+            color='text.secondary'
+            sx={{
+              mb: 5,
+              textAlign: 'center',
+              maxWidth: '600px',
+              mx: 'auto',
+            }}>
+            Welcome to your personal memory companion.
+          </Typography>
+        </Box>
+
         {/* Welcome Section */}
         <motion.div variants={itemVariants}>
           <Paper
             elevation={2}
             sx={{
-              p: 3,
-              mb: 4,
+              p: { xs: 3, md: 4 },
+              mb: 5,
               borderRadius: 3,
               background: `linear-gradient(90deg, ${(theme) =>
                 theme.palette.primary.light} 0%, ${(theme) =>
                 theme.palette.primary.main} 100%)`,
               color: 'white',
             }}>
-            <Grid container spacing={2} alignItems='center'>
+            <Grid container spacing={3} alignItems='center'>
               <Grid item xs={12} md={8}>
                 <Typography variant='h4' component='h1' gutterBottom>
                   Welcome back, {userData.name}!
                 </Typography>
-                <Typography variant='body1'>
+                <Typography variant='body1' sx={{ lineHeight: 1.6 }}>
                   Today is a great day to capture new memories. You have{' '}
                   <strong>{userData.totalMemories}</strong> memories in your
                   collection.
@@ -122,15 +168,18 @@ const PatientDashboard = () => {
             variant='h5'
             component='h2'
             gutterBottom
-            sx={{ mt: 4, mb: 2 }}>
+            sx={{ mt: 5, mb: 3 }}>
             Quick Actions
           </Typography>
-          <Grid container spacing={3}>
+          <Grid container spacing={4}>
             <Grid item xs={12} sm={6} md={3}>
               <Card
                 component={motion.div}
                 whileHover={{ y: -5, boxShadow: 4 }}
-                sx={{ height: '100%' }}>
+                sx={{
+                  height: '100%',
+                  transition: 'all 0.3s ease-in-out',
+                }}>
                 <CardContent
                   sx={{
                     display: 'flex',
@@ -138,14 +187,22 @@ const PatientDashboard = () => {
                     alignItems: 'center',
                     textAlign: 'center',
                     cursor: 'pointer',
+                    py: 3,
+                    px: 2,
+                    height: '100%',
                   }}
                   onClick={handleAddMemory}>
                   <AddPhotoAlternateIcon
                     color='primary'
-                    sx={{ fontSize: 48, mb: 1 }}
+                    sx={{ fontSize: 48, mb: 2 }}
                   />
-                  <Typography variant='h6'>Add Memory</Typography>
-                  <Typography variant='body2' color='text.secondary'>
+                  <Typography variant='h6' sx={{ mb: 1 }}>
+                    Add Memory
+                  </Typography>
+                  <Typography
+                    variant='body2'
+                    color='text.secondary'
+                    sx={{ lineHeight: 1.6 }}>
                     Record a new photo, voice, or text memory
                   </Typography>
                 </CardContent>

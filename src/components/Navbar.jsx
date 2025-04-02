@@ -100,15 +100,19 @@ const Navbar = () => {
             component='a'
             href={isPatientView ? '/patient/dashboard' : '/family/dashboard'}
             sx={{
-              mr: 2,
+              mr: 3,
               display: { xs: 'none', md: 'flex' },
-              fontFamily: 'Verdana, Arial, sans-serif',
+              fontFamily: '"Playfair Display", serif',
               fontWeight: 700,
-              letterSpacing: '.1rem',
+              fontSize: '1.4rem',
               color: 'inherit',
               textDecoration: 'none',
+              letterSpacing: '0.05rem',
             }}>
-            Memory Tracker
+            <span style={{ fontWeight: 800 }}>Memo</span>
+            <span style={{ fontWeight: 400, fontFamily: 'Roboto, sans-serif' }}>
+              Bloom
+            </span>
           </Typography>
 
           {/* Mobile menu */}
@@ -165,13 +169,17 @@ const Navbar = () => {
               mr: 2,
               display: { xs: 'flex', md: 'none' },
               flexGrow: 1,
-              fontFamily: 'Verdana, Arial, sans-serif',
+              fontFamily: '"Playfair Display", serif',
               fontWeight: 700,
-              letterSpacing: '.1rem',
+              fontSize: '1.2rem',
               color: 'inherit',
               textDecoration: 'none',
+              letterSpacing: '0.05rem',
             }}>
-            Memory Tracker
+            <span style={{ fontWeight: 800 }}>Memo</span>
+            <span style={{ fontWeight: 400, fontFamily: 'Roboto, sans-serif' }}>
+              Bloom
+            </span>
           </Typography>
 
           {/* Desktop menu */}
@@ -182,13 +190,16 @@ const Navbar = () => {
                 onClick={() => handleNavigation(page.path)}
                 sx={{
                   my: 2,
+                  mx: 1.5,
                   color: 'white',
                   display: 'flex',
                   alignItems: 'center',
-                  fontSize: '1rem',
-                  mx: 1,
+                  fontSize: '0.95rem',
+                  px: 2,
+                  py: 1,
+                  borderRadius: 1,
                   '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.15)',
                   },
                 }}>
                 {page.icon}
