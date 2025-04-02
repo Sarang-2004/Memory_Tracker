@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -11,13 +11,42 @@ import { motion } from 'framer-motion';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import DeleteIcon from '@mui/icons-material/Delete';
+import catImage from '../assets/cat.jpg';
 
-const PhotoUploader = ({ onPhotoSelected }) => {
+const PhotoUploader = ({ onPhotoSelected, defaultImage }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(defaultImage ? true : null);
+  const [previewUrl, setPreviewUrl] = useState(defaultImage || null);
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    // If a default image is provided, use it
+    if (defaultImage) {
+      setPreviewUrl(defaultImage);
+      setSelectedFile(true);
+    }
+  }, [defaultImage]);
+
+  // Set default cat image if nothing provided
+  useEffect(() => {
+    if (!previewUrl) {
+      setPreviewUrl(catImage);
+      setSelectedFile(true);
+      if (onPhotoSelected) {
+        // Create a File object from the cat image, if possible
+        fetch(catImage)
+          .then((res) => res.blob())
+          .then((blob) => {
+            const file = new File([blob], 'cat.jpg', { type: 'image/jpeg' });
+            onPhotoSelected(file);
+          })
+          .catch((err) =>
+            console.log('Could not convert default image to file object', err)
+          );
+      }
+    }
+  }, []);
 
   // Handle drag events
   const handleDragEnter = (e) => {

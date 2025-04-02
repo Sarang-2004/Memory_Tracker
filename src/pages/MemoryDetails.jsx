@@ -24,14 +24,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ShareIcon from '@mui/icons-material/Share';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
-
-// Sample placeholder images for testing
-const placeholderImages = [
-  'https://source.unsplash.com/random/800x600/?family',
-  'https://source.unsplash.com/random/800x600/?elderly',
-  'https://source.unsplash.com/random/800x600/?memory',
-  'https://source.unsplash.com/random/800x600/?nature',
-];
+import catImage from '../assets/cat.jpg';
 
 // Sample memory data
 const sampleMemories = [
@@ -40,7 +33,7 @@ const sampleMemories = [
     title: 'Family Picnic',
     date: '2023-06-15',
     type: 'photo',
-    content: placeholderImages[0],
+    content: catImage,
     description:
       'A wonderful day at the park with the whole family. We had sandwiches and played frisbee.',
     location: 'Central Park',

@@ -7,6 +7,7 @@ import {
   Button,
   IconButton,
 } from '@mui/material';
+import { motion } from 'framer-motion';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SpaIcon from '@mui/icons-material/Spa';
 import { BreathingExercise } from '../components';

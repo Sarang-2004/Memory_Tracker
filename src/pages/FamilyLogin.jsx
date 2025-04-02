@@ -18,9 +18,11 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import PeopleIcon from '@mui/icons-material/People';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { useAuth } from '../contexts/AuthContext';
 
 const FamilyLogin = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -46,8 +48,70 @@ const FamilyLogin = () => {
     }
 
     // In a real app, we would authenticate with a backend
-    // For demo purposes, we'll just navigate to the dashboard
-    navigate('/family/dashboard');
+    // For demo purposes, we'll authenticate using the context
+    const userData = {
+      name: 'Sarah Thompson', // Demo user data
+      email: formData.email,
+      patientName: 'John Doe', // Demo connected patient
+      patientId: '123456',
+      relation: 'Daughter',
+      lastActive: 'Yesterday',
+      recentActivities: [
+        {
+          id: 1,
+          type: 'memory_added',
+          title: 'Added a new photo',
+          date: '2 hours ago',
+        },
+        {
+          id: 2,
+          type: 'routine_completed',
+          title: 'Completed morning routine',
+          date: 'Yesterday',
+        },
+        {
+          id: 3,
+          type: 'event_scheduled',
+          title: 'Doctor appointment scheduled',
+          date: '3 days ago',
+        },
+      ],
+      memories: [
+        {
+          id: 1,
+          title: 'Beach Day',
+          description: 'A wonderful day at Malibu Beach with Dad',
+          date: 'June 15, 2023',
+          imageUrl: 'https://source.unsplash.com/random/800x600/?beach',
+          location: 'Malibu, CA',
+          tags: ['family', 'beach', 'summer'],
+          reactions: 5,
+        },
+        {
+          id: 2,
+          title: 'Birthday Celebration',
+          description: "Dad's 65th birthday with all the grandchildren",
+          date: 'May 2, 2023',
+          imageUrl: 'https://source.unsplash.com/random/800x600/?birthday',
+          location: 'Home',
+          tags: ['birthday', 'family', 'celebration'],
+          reactions: 8,
+        },
+        {
+          id: 3,
+          title: 'Garden Visit',
+          description: 'Taking Dad to the Botanical Gardens',
+          date: 'April 10, 2023',
+          imageUrl: 'https://source.unsplash.com/random/800x600/?garden',
+          location: 'Botanical Gardens',
+          tags: ['nature', 'garden', 'spring'],
+          reactions: 3,
+        },
+      ],
+      // Add any other user data you need
+    };
+
+    login('family', userData);
   };
 
   return (

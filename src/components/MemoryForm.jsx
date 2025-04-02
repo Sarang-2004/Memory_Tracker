@@ -25,6 +25,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import { PhotoUploader, VoiceRecorder } from './';
+import catImage from '../assets/cat.jpg';
 
 const MemoryForm = () => {
   const [memoryType, setMemoryType] = useState('photo');
@@ -37,7 +38,7 @@ const MemoryForm = () => {
     filter: 'none',
   });
   const [newPerson, setNewPerson] = useState('');
-  const [photoPreview, setPhotoPreview] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(catImage);
   const [notification, setNotification] = useState({
     open: false,
     message: '',
@@ -53,6 +54,9 @@ const MemoryForm = () => {
   // Handle memory type change
   const handleTypeChange = (e) => {
     setMemoryType(e.target.value);
+    if (e.target.value === 'photo') {
+      setPhotoPreview(catImage);
+    }
   };
 
   // Handle adding a person
@@ -123,7 +127,7 @@ const MemoryForm = () => {
       content: '',
       filter: 'none',
     });
-    setPhotoPreview(null);
+    setPhotoPreview(catImage);
     setMemoryType('photo');
   };
 
@@ -269,29 +273,36 @@ const MemoryForm = () => {
 
               {memoryType === 'photo' && (
                 <Box>
-                  <PhotoUploader onPhotoSelected={handlePhotoUpload} />
+                  <Typography variant='h6' gutterBottom>
+                    Upload a Photo
+                  </Typography>
+                  <PhotoUploader
+                    onPhotoSelected={handlePhotoUpload}
+                    defaultImage={photoPreview}
+                  />
 
-                  {photoPreview && (
-                    <Box sx={{ mt: 2 }}>
-                      <Typography variant='subtitle1' gutterBottom>
-                        Photo Filter
-                      </Typography>
-                      <FormControl fullWidth sx={{ mb: 2 }}>
-                        <InputLabel id='filter-label'>Apply Filter</InputLabel>
-                        <Select
-                          labelId='filter-label'
-                          id='filter'
-                          name='filter'
-                          value={formData.filter}
-                          label='Apply Filter'
-                          onChange={handleInputChange}>
-                          <MenuItem value='none'>No Filter</MenuItem>
-                          <MenuItem value='polaroid'>Polaroid Frame</MenuItem>
-                          <MenuItem value='sepia'>Sepia Tone</MenuItem>
-                          <MenuItem value='vintage'>Vintage</MenuItem>
-                        </Select>
-                      </FormControl>
+                  {/* Photo filters */}
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant='subtitle1' gutterBottom>
+                      Photo Filter
+                    </Typography>
+                    <FormControl fullWidth sx={{ mb: 2 }}>
+                      <InputLabel id='filter-label'>Apply Filter</InputLabel>
+                      <Select
+                        labelId='filter-label'
+                        id='filter'
+                        name='filter'
+                        value={formData.filter}
+                        label='Apply Filter'
+                        onChange={handleInputChange}>
+                        <MenuItem value='none'>No Filter</MenuItem>
+                        <MenuItem value='polaroid'>Polaroid Frame</MenuItem>
+                        <MenuItem value='sepia'>Sepia Tone</MenuItem>
+                        <MenuItem value='vintage'>Vintage</MenuItem>
+                      </Select>
+                    </FormControl>
 
+                    {photoPreview && (
                       <Box sx={{ mt: 2, position: 'relative' }}>
                         <img
                           src={photoPreview}
@@ -327,13 +338,16 @@ const MemoryForm = () => {
                           }}
                         />
                       </Box>
-                    </Box>
-                  )}
+                    )}
+                  </Box>
                 </Box>
               )}
 
               {memoryType === 'voice' && (
                 <Box>
+                  <Typography variant='h6' gutterBottom>
+                    Record a Voice Memory
+                  </Typography>
                   <VoiceRecorder onRecordingComplete={handleVoiceRecorded} />
                 </Box>
               )}
