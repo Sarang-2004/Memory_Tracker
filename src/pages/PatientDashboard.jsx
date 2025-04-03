@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { supabase } from './server';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -50,99 +51,62 @@ const PatientDashboard = () => {
   const isDarkMode = theme.palette.mode === 'dark';
 
   // Create a combined userData object with defaults and auth data
-  const userData = {
-    name: user?.name || 'John Doe',
-    email: user?.email || 'john@example.com',
-    familyMembers: user?.familyMembers || [
-      { name: 'Mary (Daughter)', avatar: null },
-      { name: 'Robert (Son)', avatar: null },
-      { name: 'Emily (Granddaughter)', avatar: null },
-    ],
-    ...user, // Include any other properties from auth
+  const [memories, setMemories] = useState([]);
+const [loading, setLoading] = useState(true);
+  const [recentLocations, setRecentLocations] = useState([]);
+
+useEffect(() => {
+  const fetchMemories = async () => {
+    try {
+        // Get the current user's ID
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user) {
+          throw new Error("User not authenticated");
+        }
+
+      const { data, error } = await supabase
+        .from('memories')
+          .select('*')
+          .eq('user_id', user.id) // Filter by current user's ID
+          .order('date', { ascending: false });
+
+      if (error) throw error;
+
+      setMemories(data || []);
+
+        // Get unique locations, keeping only the most recent occurrence of each
+        const uniqueLocations = data
+          .filter(memory => memory.location && memory.location.trim() !== '')
+          .reduce((acc, memory) => {
+            if (!acc.includes(memory.location)) {
+              acc.push(memory.location);
+            }
+            return acc;
+          }, [])
+          .slice(0, 3); // Take only the first 3 unique locations
+
+        setRecentLocations(uniqueLocations);
+    } catch (error) {
+      console.error('Error fetching memories:', error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Update greeting based on time of day
-  useEffect(() => {
-    const updateGreeting = () => {
-      setGreeting(getGreetingMessage());
-    };
+  fetchMemories();
+}, []);
 
-    // Initial update
-    updateGreeting();
+const handleAddMemory = () => {
+  navigate('/add-memory');
+};
 
-    // Set up interval to check time every minute
-    const intervalId = setInterval(updateGreeting, 60000);
+const handleViewMemory = (id) => {
+  navigate(`/memory/${id}`);
+};
 
-    // Clean up interval
-    return () => clearInterval(intervalId);
-  }, []);
-
-  // Sample memories for demonstration
-  const memories = [
-    {
-      id: 1,
-      title: 'Beach Day',
-      description: 'A wonderful day at Malibu Beach with family',
-      date: 'June 15, 2023',
-      content: catImage,
-      location: 'Malibu, CA',
-      tags: ['family', 'beach', 'summer'],
-      type: 'photo',
-    },
-    {
-      id: 2,
-      title: 'Birthday Celebration',
-      description: 'My 65th birthday with all the grandchildren',
-      date: 'May 2, 2023',
-      content: catImage,
-      location: 'Home',
-      tags: ['birthday', 'family', 'celebration'],
-      type: 'photo',
-    },
-    {
-      id: 3,
-      title: 'Garden Visit',
-      description: 'Visiting the Botanical Gardens on a sunny day',
-      date: 'April 10, 2023',
-      content: catImage,
-      location: 'Botanical Gardens',
-      tags: ['nature', 'garden', 'spring'],
-      type: 'photo',
-    },
-    {
-      id: 4,
-      title: 'My Favorite Recipe',
-      description: 'The apple pie recipe that I learned from my mother',
-      date: 'March 20, 2023',
-      content:
-        'This apple pie recipe has been in our family for generations. I remember my mother teaching me how to make the perfect crust when I was just a little girl.',
-      location: 'Home Kitchen',
-      tags: ['recipe', 'food', 'memory'],
-      type: 'text',
-    },
-    {
-      id: 5,
-      title: 'Story About My Childhood',
-      description: 'A recording of me talking about growing up on the farm',
-      date: 'February 15, 2023',
-      content: 'audio-recording.mp3',
-      location: 'Living Room',
-      tags: ['story', 'childhood', 'history'],
-      type: 'voice',
-    },
-  ];
-
-  const handleAddMemory = () => {
-    navigate('/add-memory');
-  };
-
-  const handleViewMemory = (id) => {
-    navigate(`/memory/${id}`);
-  };
-
-  const toggleBreathingExercise = () => {
-    setShowBreathingExercise(!showBreathingExercise);
-  };
+const toggleBreathingExercise = () => {
+  setShowBreathingExercise(!showBreathingExercise);
+};
 
   // Animation variants
   const itemVariants = {
@@ -166,6 +130,12 @@ const PatientDashboard = () => {
     } else {
       return 'Good evening!';
     }
+  };
+
+  const userData = {
+    name: user?.name || 'Guest', // Default name if undefined
+    email: user?.email || '',
+    familyMembers: user?.familyMembers || [], // Add default empty array for familyMembers
   };
 
   return (
@@ -239,7 +209,7 @@ const PatientDashboard = () => {
                         color: '#fff',
                         textShadow: '0 2px 4px rgba(0,0,0,0.2)',
                       }}>
-                      {greeting} {userData.name}
+                      {greeting} {userData?.name}
                     </Typography>
                     <Typography
                       variant='subtitle1'
@@ -274,7 +244,7 @@ const PatientDashboard = () => {
                         <Typography
                           variant='h4'
                           sx={{ fontWeight: 700, color: '#fff' }}>
-                          {userData.familyMembers.length}
+                          {userData?.familyMembers.length}
                         </Typography>
                         <Typography variant='body2' sx={{ color: '#fff' }}>
                           Family Members
@@ -413,56 +383,31 @@ const PatientDashboard = () => {
                       </IconButton>
                     </Box>
                     <Divider sx={{ mb: 3 }} />
+                    {recentLocations.length > 0 ? (
                     <Stack spacing={2}>
-                      {userData.familyMembers.map((member) => (
-                        <Card
-                          key={member.name}
-                          variant='outlined'
-                          sx={{
-                            borderRadius: 2,
-                            boxShadow: 'none',
-                            transition: 'all 0.3s ease',
-                            bgcolor: (theme) => theme.palette.background.paper,
-                            '&:hover': {
-                              borderColor: 'primary.main',
-                              bgcolor: (theme) =>
-                                alpha(theme.palette.primary.main, 0.05),
-                            },
-                          }}>
-                          <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                            <Box
+                        {recentLocations.map((location, index) => (
+                          <Box
+                            key={index}
                               sx={{
                                 display: 'flex',
                                 alignItems: 'center',
-                                justifyContent: 'space-between',
-                              }}>
-                              <Box
-                                sx={{ display: 'flex', alignItems: 'center' }}>
-                                <Avatar
-                                  sx={{
-                                    width: 32,
-                                    height: 32,
-                                    mr: 1,
-                                    bgcolor: (theme) =>
-                                      theme.palette.primary.main,
-                                    fontSize: '0.875rem',
-                                  }}>
-                                  {member.name.charAt(0)}
-                                </Avatar>
-                                <Box>
-                                  <Typography variant='body1'>
-                                    {member.name}
-                                  </Typography>
-                                </Box>
-                              </Box>
-                              <IconButton size='small'>
-                                <ArrowForwardIcon fontSize='small' />
-                              </IconButton>
+                              gap: 1,
+                              p: 1,
+                              borderRadius: 1,
+                              '&:hover': {
+                                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                              },
+                            }}>
+                              <LocationOnIcon color="primary" sx={{ fontSize: 20 }} />
+                              <Typography variant="body1">{location}</Typography>
                             </Box>
-                          </CardContent>
-                        </Card>
                       ))}
                     </Stack>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        No recent locations found
+                      </Typography>
+                    )}
                   </Paper>
                 </motion.div>
               </Grid>
@@ -509,7 +454,7 @@ const PatientDashboard = () => {
                     </Box>
                     <Divider sx={{ mb: 3 }} />
                     <Stack spacing={2}>
-                      {userData.familyMembers.map((member) => (
+                      {userData?.familyMembers.map((member) => (
                         <Card
                           key={member.name}
                           variant='outlined'
@@ -698,67 +643,72 @@ const PatientDashboard = () => {
                     View All
                   </Button>
                 </Box>
+        
                 <Grid container spacing={3}>
-                  {memories.slice(0, 3).map((memory) => (
-                    <Grid item xs={12} sm={6} md={4} key={memory.id}>
-                      <Card
-                        sx={{
-                          height: '100%',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          borderRadius: 2,
-                          cursor: 'pointer',
-                          transition: 'all 0.3s ease',
-                          '&:hover': {
-                            transform: 'translateY(-5px)',
-                            boxShadow: (theme) =>
-                              `0 8px 16px ${alpha(
-                                theme.palette.primary.main,
-                                0.15
-                              )}`,
-                          },
-                        }}
-                        onClick={() => handleViewMemory(memory.id)}>
-                        <CardMedia
-                          component='img'
-                          height='140'
-                          image={memory.content}
-                          alt={memory.title}
-                        />
-                        <CardContent sx={{ flexGrow: 1 }}>
-                          <Typography variant='h6' component='div' gutterBottom>
-                            {memory.title}
-                          </Typography>
-                          <Typography
-                            variant='caption'
-                            color='text.secondary'
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              mb: 1,
-                            }}>
-                            <CalendarTodayOutlinedIcon
-                              fontSize='inherit'
-                              sx={{ mr: 0.5 }}
-                            />
-                            {memory.date}
-                          </Typography>
-                          <Typography
-                            variant='body2'
-                            color='text.secondary'
-                            sx={{
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              display: '-webkit-box',
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: 'vertical',
-                            }}>
-                            {memory.description}
-                          </Typography>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  ))}
+                  {memories?.length > 0 ? (
+                    memories.slice(0, 3).map((memory) => (
+                      <Grid item xs={12} sm={6} md={4} key={memory.id}>
+                        <Card
+                          sx={{
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            borderRadius: 2,
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                              transform: 'translateY(-5px)',
+                              boxShadow: (theme) =>
+                                `0 8px 16px ${alpha(theme.palette.primary.main, 0.15)}`,
+                            },
+                          }}
+                          onClick={() => handleViewMemory(memory.id)}
+                        >
+                          <CardMedia
+                            component="img"
+                            height="140"
+                            image={memory.content || catImage}
+                            alt={memory.title || "Memory"}
+                          />
+                          <CardContent sx={{ flexGrow: 1 }}>
+                            <Typography variant="h6" component="div" gutterBottom>
+                              {memory.title || "Untitled Memory"}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                mb: 1,
+                              }}
+                            >
+                              <CalendarTodayOutlinedIcon fontSize="inherit" sx={{ mr: 0.5 }} />
+                              {memory.date || "Unknown Date"}
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              sx={{
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                display: "-webkit-box",
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: "vertical",
+                              }}
+                            >
+                              {memory.description || "No description available."}
+                            </Typography>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    ))
+                  ) : (
+                    // **This part was missing in your code**
+                    <Typography variant="body1" color="text.secondary" sx={{ m: 2 }}>
+                      No memories found.
+                    </Typography>
+                  )}
                 </Grid>
               </Paper>
             </motion.div>

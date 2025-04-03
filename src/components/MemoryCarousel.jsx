@@ -57,6 +57,7 @@ const MemoryCarousel = ({
   memories = [],
   interval = 5000,
   autoPlay = true,
+  loading = false,
 }) => {
   const theme = useTheme();
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -100,13 +101,13 @@ const MemoryCarousel = ({
   // Auto-advance slides when isPlaying is true
   useEffect(() => {
     let timer;
-    if (isPlaying) {
+    if (isPlaying && currentMemory) {
       timer = setTimeout(() => {
         goToNext();
       }, interval);
     }
     return () => clearTimeout(timer);
-  }, [currentIndex, isPlaying, interval]);
+  }, [currentIndex, isPlaying, interval, currentMemory]);
 
   const goToPrevious = () => {
     setCurrentIndex((prevIndex) =>
@@ -130,6 +131,8 @@ const MemoryCarousel = ({
 
   // Render different content based on memory type
   const getMemoryContent = (memory) => {
+    if (!memory) return null;
+    
     const isDarkMode = theme.palette.mode === 'dark';
 
     switch (memory.type) {
@@ -358,6 +361,55 @@ const MemoryCarousel = ({
     }
   };
 
+  // Render loading state
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          position: 'relative',
+          overflow: 'hidden',
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: (theme) =>
+            theme.palette.mode === 'dark'
+              ? alpha(theme.palette.background.paper, 0.7)
+              : '#fff',
+        }}>
+        <Typography variant="h6" color="text.secondary">
+          Loading memories...
+        </Typography>
+      </Box>
+    );
+  }
+
+  // Render empty state
+  if (!loading && memories.length === 0) {
+    return (
+      <Box
+        sx={{
+          position: 'relative',
+          overflow: 'hidden',
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: (theme) =>
+            theme.palette.mode === 'dark'
+              ? alpha(theme.palette.background.paper, 0.7)
+              : '#fff',
+        }}>
+        <Typography variant="h6" color="text.secondary">
+          No memories yet. Add your first memory!
+        </Typography>
+      </Box>
+    );
+  }
+
+  // Render carousel
   return (
     <Box
       sx={{
@@ -384,15 +436,17 @@ const MemoryCarousel = ({
           width: '100%',
         }}>
         <AnimatePresence mode='wait'>
-          <motion.div
-            key={currentIndex}
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -100 }}
-            transition={{ duration: 0.5 }}
-            style={{ height: '100%', width: '100%' }}>
-            {getMemoryContent(currentMemory)}
-          </motion.div>
+          {currentMemory && (
+            <motion.div
+              key={currentIndex}
+              initial={{ opacity: 0, x: 100 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -100 }}
+              transition={{ duration: 0.5 }}
+              style={{ height: '100%', width: '100%' }}>
+              {getMemoryContent(currentMemory)}
+            </motion.div>
+          )}
         </AnimatePresence>
       </Box>
 

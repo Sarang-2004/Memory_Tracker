@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { supabase } from "./server";
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Box,
@@ -54,58 +55,62 @@ const PatientRegister = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Basic validation
-    if (
-      !formData.name ||
-      !formData.mobile ||
-      !formData.email ||
-      !formData.password ||
-      !formData.confirmPassword
-    ) {
+    
+    if (!formData.name || !formData.mobile || !formData.email || !formData.password || !formData.confirmPassword) {
       setError('Please fill in all fields');
       return;
     }
-
+  
     if (!formData.agreeTerms) {
       setError('Please agree to the terms and conditions');
       return;
     }
-
+  
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
     }
-
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      return;
-    }
-
-    // Mobile number validation
+  
     const mobileRegex = /^[0-9]{10}$/;
     if (!mobileRegex.test(formData.mobile.replace(/[^0-9]/g, ''))) {
       setError('Please enter a valid 10-digit Indian mobile number');
       return;
     }
-
-    // In a real app, we would register with a backend
-    // For demo purposes, we'll just log in the user directly
-    const userData = {
-      name: formData.name,
-      mobile: formData.mobile,
-      email: formData.email,
-      familyMembers: [],
-      memories: [],
-      // Add any other user data you need
-    };
-
-    login('patient', userData);
-    // Navigate to dashboard after successful registration
-    navigate('/patient/dashboard');
+  
+    try {
+      // Step 1: Sign up user using Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+      });
+  
+      if (authError) throw authError;
+  
+      // Step 2: Store additional user details in the 'patients' table
+      const { data: userData, error: userError } = await supabase
+        .from('patients')
+        .insert([
+          {
+            id: authData.user.id,  // Store Supabase-auth user ID
+            name: formData.name,
+            mobile: formData.mobile,
+            email: formData.email,
+          },
+        ]);
+  
+      if (userError) throw userError;
+  
+      console.log('Patient registered:', userData);
+      navigate('/patient/dashboard');
+    } catch (error) {
+      console.error('Error registering patient:', error.message);
+      setError(error.message);
+    }
   };
-
+  
+  
   return (
     <Box
       sx={{

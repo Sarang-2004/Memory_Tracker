@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { supabase } from "./server.js";
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Box,
@@ -39,60 +40,91 @@ const PatientLogin = () => {
     setShowPassword(!showPassword);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Basic validation
+  
     if (!formData.email || !formData.password) {
       setError('Please fill in all fields');
       return;
     }
-
-    // In a real app, we would authenticate with a backend
-    // For demo purposes, we'll authenticate using the context
-    const userData = {
-      name: 'John Doe', // Demo user data
-      email: formData.email,
-      familyMembers: [
-        { id: 1, name: 'Sarah Thompson', relation: 'Daughter' },
-        { id: 2, name: 'Mark Johnson', relation: 'Son' },
-      ],
-      memories: [
-        {
-          id: 1,
-          title: 'Beach Day',
-          description: 'A wonderful day at Malibu Beach with family',
-          date: 'June 15, 2023',
-          imageUrl: 'https://source.unsplash.com/random/800x600/?beach',
-          location: 'Malibu, CA',
-          tags: ['family', 'beach', 'summer'],
-          reactions: 5,
-        },
-        {
-          id: 2,
-          title: 'Birthday Celebration',
-          description: 'My 65th birthday with all the grandchildren',
-          date: 'May 2, 2023',
-          imageUrl: 'https://source.unsplash.com/random/800x600/?birthday',
-          location: 'Home',
-          tags: ['birthday', 'family', 'celebration'],
-          reactions: 8,
-        },
-        {
-          id: 3,
-          title: 'Garden Visit',
-          description: 'Visiting the Botanical Gardens on a sunny day',
-          date: 'April 10, 2023',
-          imageUrl: 'https://source.unsplash.com/random/800x600/?garden',
-          location: 'Botanical Gardens',
-          tags: ['nature', 'garden', 'spring'],
-          reactions: 3,
-        },
-      ],
-      // Add any other user data you need
-    };
-
-    login('patient', userData);
+  
+    try {
+      // Step 1: Authenticate user with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
+  
+      if (authError) {
+        setError('Invalid email or password');
+        return;
+      }
+  
+      // Step 2: Fetch additional user details from 'patients' table
+      const { data: patientData, error: patientError } = await supabase
+        .from('patients')
+        .select('*')
+        .eq('id', authData.user.id) // Fetch data using authenticated user ID
+        .single();
+  
+      if (patientError) {
+        setError('Error fetching patient data');
+        return;
+      }
+  
+      console.log('Patient authenticated:', patientData);
+  
+      // Step 3: Store authenticated user data in context/state
+      const userData = {
+        name: patientData.name,
+        email: patientData.email,
+        mobile: patientData.mobile,
+        familyMembers: [
+          { id: 1, name: 'Sarah Thompson', relation: 'Daughter' },
+          { id: 2, name: 'Mark Johnson', relation: 'Son' },
+        ],
+        memories: [
+          {
+            id: 1,
+            title: 'Beach Day',
+            description: 'A wonderful day at Malibu Beach with family',
+            date: 'June 15, 2023',
+            imageUrl: 'https://source.unsplash.com/random/800x600/?beach',
+            location: 'Malibu, CA',
+            tags: ['family', 'beach', 'summer'],
+            reactions: 5,
+          },
+          {
+            id: 2,
+            title: 'Birthday Celebration',
+            description: 'My 65th birthday with all the grandchildren',
+            date: 'May 2, 2023',
+            imageUrl: 'https://source.unsplash.com/random/800x600/?birthday',
+            location: 'Home',
+            tags: ['birthday', 'family', 'celebration'],
+            reactions: 8,
+          },
+          {
+            id: 3,
+            title: 'Garden Visit',
+            description: 'Visiting the Botanical Gardens on a sunny day',
+            date: 'April 10, 2023',
+            imageUrl: 'https://source.unsplash.com/random/800x600/?garden',
+            location: 'Botanical Gardens',
+            tags: ['nature', 'garden', 'spring'],
+            reactions: 3,
+          },
+        ],
+      };
+  
+      login('patient', userData); // Store user session
+      navigate('/patient/dashboard'); // Redirect after login
+    } catch (error) {
+      console.error('Error logging in:', error.message);
+      setError(error.message);
+    }
   };
+  
 
   return (
     <Box

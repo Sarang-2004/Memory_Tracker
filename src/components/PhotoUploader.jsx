@@ -12,6 +12,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import DeleteIcon from '@mui/icons-material/Delete';
 import catImage from '../assets/cat.jpg';
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 
 const PhotoUploader = ({ onPhotoSelected, defaultImage }) => {
   const [isDragging, setIsDragging] = useState(false);
@@ -120,103 +121,65 @@ const PhotoUploader = ({ onPhotoSelected, defaultImage }) => {
     fileInputRef.current.click();
   };
 
+  const handleClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      onPhotoSelected(file);
+    }
+  };
+
   return (
-    <Box sx={{ width: '100%' }}>
-      {!selectedFile ? (
-        <Paper
-          component={motion.div}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          sx={{
-            border: '2px dashed',
-            borderColor: isDragging ? 'primary.main' : 'divider',
-            borderRadius: 2,
-            p: 3,
-            textAlign: 'center',
-            bgcolor: isDragging
-              ? 'rgba(106, 90, 205, 0.05)'
-              : 'background.paper',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
+    <Box
+      sx={{
+        width: '100%',
+        height: '200px',
+        border: '2px dashed',
+        borderColor: 'primary.main',
+        borderRadius: 2,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        position: 'relative',
+        overflow: 'hidden',
+        bgcolor: 'background.paper',
+      }}
+      onClick={handleClick}>
+      {defaultImage ? (
+        <img
+          src={defaultImage}
+          alt="Memory preview"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
           }}
-          onDragEnter={handleDragEnter}
-          onDragLeave={handleDragLeave}
-          onDragOver={handleDragOver}
-          onDrop={handleDrop}
-          onClick={handleButtonClick}>
-          <input
-            type='file'
-            ref={fileInputRef}
-            onChange={handleFileSelect}
-            accept='image/*'
-            style={{ display: 'none' }}
-          />
-          <CloudUploadIcon
-            sx={{ fontSize: 60, color: 'primary.main', mb: 2 }}
-          />
-          <Typography variant='h6' gutterBottom>
-            Drag & Drop Photo Here
-          </Typography>
-          <Typography variant='body2' color='text.secondary' paragraph>
-            or click to browse your files
-          </Typography>
-          <Button
-            variant='contained'
-            color='primary'
-            startIcon={<PhotoCameraIcon />}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleButtonClick();
-            }}>
-            Select Photo
-          </Button>
-        </Paper>
+        />
       ) : (
-        <Box sx={{ position: 'relative' }}>
-          {isUploading ? (
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                p: 3,
-              }}>
-              <CircularProgress size={60} />
-              <Typography variant='body1' sx={{ mt: 2 }}>
-                Uploading photo...
-              </Typography>
-            </Box>
-          ) : (
-            <Box sx={{ position: 'relative' }}>
-              <img
-                src={previewUrl}
-                alt='Preview'
-                style={{
-                  width: '100%',
-                  maxHeight: '300px',
-                  objectFit: 'contain',
-                  borderRadius: '4px',
-                }}
-              />
-              <IconButton
-                sx={{
-                  position: 'absolute',
-                  top: 8,
-                  right: 8,
-                  bgcolor: 'rgba(0, 0, 0, 0.5)',
-                  color: 'white',
-                  '&:hover': {
-                    bgcolor: 'rgba(0, 0, 0, 0.7)',
-                  },
-                }}
-                onClick={handleClearFile}>
-                <DeleteIcon />
-              </IconButton>
-            </Box>
-          )}
-        </Box>
+        <>
+          <AddPhotoAlternateIcon
+            sx={{ fontSize: 48, color: 'primary.main', mb: 1 }}
+          />
+          <Typography variant="body1" color="textSecondary">
+            Click to upload a photo
+          </Typography>
+          <Typography variant="caption" color="textSecondary">
+            Supports: JPG, PNG, GIF
+          </Typography>
+        </>
       )}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept="image/*"
+        style={{ display: 'none' }}
+      />
     </Box>
   );
 };

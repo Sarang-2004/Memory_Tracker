@@ -13,6 +13,7 @@ import {
   Card,
   CardMedia,
   CardContent,
+  CircularProgress,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -22,68 +23,72 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ShareIcon from '@mui/icons-material/Share';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import PauseIcon from '@mui/icons-material/Pause';
-import catImage from '../assets/cat.jpg';
-
-// Sample memory data
-const sampleMemories = [
-  {
-    id: '1',
-    title: 'Family Picnic',
-    date: '2023-06-15',
-    type: 'photo',
-    content: catImage,
-    description:
-      'A wonderful day at the park with the whole family. We had sandwiches and played frisbee.',
-    location: 'Central Park',
-    people: ['Mom', 'Dad', 'Sister'],
-    filter: 'polaroid',
-  },
-  {
-    id: '2',
-    title: 'Birthday Celebration',
-    date: '2023-05-20',
-    type: 'voice',
-    content: 'audio-file-url.mp3',
-    description:
-      'Recording of everyone singing happy birthday and sharing stories.',
-    location: 'Home',
-    people: ['Grandchildren', 'Children'],
-    filter: 'none',
-  },
-  {
-    id: '3',
-    title: 'My Favorite Recipe',
-    date: '2023-04-10',
-    type: 'text',
-    content:
-      'This apple pie recipe has been in our family for generations. I remember my mother teaching me how to make the perfect crust when I was just a little girl.',
-    description: "Grandma's special apple pie recipe that everyone loves.",
-    location: 'Kitchen',
-    people: [],
-    filter: 'none',
-  },
-];
+import { supabase } from '../pages/server';
+import AudioPlayer from '../components/AudioPlayer';
 
 const MemoryDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [memory, setMemory] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // In a real app, we would fetch the memory from an API
-    // For demo purposes, we'll use the sample data
-    const foundMemory = sampleMemories.find((m) => m.id === id);
-    if (foundMemory) {
-      setMemory(foundMemory);
-    } else {
-      setError('Memory not found');
-    }
-    setLoading(false);
+    const fetchMemory = async () => {
+      try {
+        // Get the current user's ID
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user) {
+          throw new Error("User not authenticated");
+        }
+
+        // First, get the memory
+        const { data: memoryData, error: memoryError } = await supabase
+          .from('memories')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (memoryError) throw memoryError;
+
+        if (!memoryData) {
+          setError('Memory not found');
+          return;
+        }
+
+        // Check if the memory belongs to the current user
+        if (memoryData.user_id === user.id) {
+          setMemory(memoryData);
+          return;
+        }
+
+        // If not, check if the current user is a family member connected to the patient
+        const { data: familyData, error: familyError } = await supabase
+          .from('family_members')
+          .select('patient_id')
+          .eq('id', user.id)
+          .single();
+
+        if (familyError || !familyData) {
+          setError('You do not have permission to view this memory');
+          return;
+        }
+
+        // Check if the memory belongs to the connected patient
+        if (memoryData.user_id === familyData.patient_id) {
+          setMemory(memoryData);
+        } else {
+          setError('You do not have permission to view this memory');
+        }
+      } catch (err) {
+        console.error('Error fetching memory:', err.message);
+        setError('Error loading memory');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMemory();
   }, [id]);
 
   const handleBack = () => {
@@ -95,20 +100,25 @@ const MemoryDetails = () => {
     console.log('Edit memory:', id);
   };
 
-  const handleDelete = () => {
-    // In a real app, we would show a confirmation dialog and delete the memory
-    console.log('Delete memory:', id);
-    navigate(-1);
+  const handleDelete = async () => {
+    try {
+      const { error } = await supabase
+        .from('memories')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      navigate(-1);
+    } catch (err) {
+      console.error('Error deleting memory:', err.message);
+      setError('Error deleting memory');
+    }
   };
 
   const handleShare = () => {
     // In a real app, we would show sharing options
     console.log('Share memory:', id);
-  };
-
-  const handleTogglePlay = () => {
-    setIsPlaying(!isPlaying);
-    // In a real app, we would play/pause the audio
   };
 
   const formatDate = (dateString) => {
@@ -183,51 +193,9 @@ const MemoryDetails = () => {
             <Typography variant='h6' gutterBottom>
               Voice Recording
             </Typography>
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '100%',
-                my: 2,
-              }}>
-              <IconButton
-                color='primary'
-                size='large'
-                onClick={handleTogglePlay}
-                sx={{
-                  bgcolor: 'primary.main',
-                  color: 'white',
-                  '&:hover': { bgcolor: 'primary.dark' },
-                  mx: 2,
-                }}>
-                {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
-              </IconButton>
-              <Box
-                sx={{
-                  height: '40px',
-                  flexGrow: 1,
-                  bgcolor: 'background.default',
-                  borderRadius: 1,
-                  position: 'relative',
-                  overflow: 'hidden',
-                }}>
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    height: '100%',
-                    width: isPlaying ? '60%' : '0%',
-                    bgcolor: 'primary.light',
-                    transition: 'width 0.3s linear',
-                  }}
-                />
-              </Box>
+            <Box sx={{ width: '100%' }}>
+              <AudioPlayer filePath={memory.content} showControls={true} />
             </Box>
-            <Typography variant='body2' color='text.secondary'>
-              {isPlaying ? 'Playing...' : 'Click play to listen'}
-            </Typography>
           </Box>
         );
       case 'text':
@@ -255,8 +223,8 @@ const MemoryDetails = () => {
 
   if (loading) {
     return (
-      <Container maxWidth='md' sx={{ mt: 4, mb: 4 }}>
-        <Typography>Loading...</Typography>
+      <Container maxWidth='md' sx={{ mt: 4, mb: 4, display: 'flex', justifyContent: 'center' }}>
+        <CircularProgress />
       </Container>
     );
   }

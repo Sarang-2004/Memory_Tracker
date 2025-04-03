@@ -1,4 +1,6 @@
 import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { supabase } from './server';
 import {
   Box,
   Typography,
@@ -31,6 +33,48 @@ import catImage from '../assets/cat.jpg';
 const FamilyDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [memories, setMemories] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMemories = async () => {
+      try {
+        // Get the current user's ID
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user) {
+          throw new Error("User not authenticated");
+        }
+
+        // Get the connected patient's ID from the family_members table
+        const { data: familyData, error: familyError } = await supabase
+          .from('family_members')
+          .select('patient_id')
+          .eq('id', user.id)
+          .single();
+
+        if (familyError || !familyData) {
+          throw new Error("Could not find connected patient");
+        }
+
+        // Fetch memories for the connected patient
+        const { data, error } = await supabase
+          .from('memories')
+          .select('*')
+          .eq('user_id', familyData.patient_id)
+          .order('date', { ascending: false });
+
+        if (error) throw error;
+
+        setMemories(data || []);
+      } catch (error) {
+        console.error('Error fetching memories:', error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMemories();
+  }, []);
 
   // Create a combined userData object with defaults and auth data
   const userData = {
@@ -59,67 +103,8 @@ const FamilyDashboard = () => {
         date: '3 days ago',
       },
     ],
-    ...user, // Include any other properties from auth
+    ...user,
   };
-
-  const memories = user?.memories || [
-    {
-      id: 1,
-      title: 'Beach Day',
-      description: 'A wonderful day at Malibu Beach with family',
-      date: 'June 15, 2023',
-      content: catImage,
-      location: 'Malibu, CA',
-      tags: ['family', 'beach', 'summer'],
-      reactions: 5,
-      type: 'photo',
-    },
-    {
-      id: 2,
-      title: 'Birthday Celebration',
-      description: "Dad's 65th birthday with all the grandchildren",
-      date: 'May 2, 2023',
-      content: catImage,
-      location: 'Home',
-      tags: ['birthday', 'family', 'celebration'],
-      reactions: 8,
-      type: 'photo',
-    },
-    {
-      id: 3,
-      title: 'Garden Visit',
-      description: 'Visiting the Botanical Gardens on a sunny day',
-      date: 'April 10, 2023',
-      content: catImage,
-      location: 'Botanical Gardens',
-      tags: ['nature', 'garden', 'spring'],
-      reactions: 3,
-      type: 'photo',
-    },
-    {
-      id: 4,
-      title: "Dad's Favorite Recipe",
-      description: 'The apple pie recipe that dad always loved to make',
-      date: 'March 20, 2023',
-      content:
-        'This apple pie recipe has been in our family for generations. Dad always said the secret was adding a pinch of nutmeg and using cold butter in the crust.',
-      location: 'Home',
-      tags: ['recipe', 'food', 'memory'],
-      reactions: 6,
-      type: 'text',
-    },
-    {
-      id: 5,
-      title: "Dad's Story About His Childhood",
-      description: 'A recording of dad talking about growing up on the farm',
-      date: 'February 15, 2023',
-      content: 'audio-recording.mp3',
-      location: 'Living Room',
-      tags: ['story', 'childhood', 'history'],
-      reactions: 7,
-      type: 'voice',
-    },
-  ];
 
   return (
     <Container maxWidth='lg' sx={{ py: 4 }}>
@@ -267,7 +252,7 @@ const FamilyDashboard = () => {
                 sx={{ ml: 1, fontWeight: 600 }}>
                 {userData.patientName}'s Memories
               </Typography>
-              <MemoryCarousel memories={memories} />
+              <MemoryCarousel memories={memories} loading={loading} />
             </Box>
           </motion.div>
         </Grid>

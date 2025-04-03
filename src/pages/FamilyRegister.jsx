@@ -13,6 +13,7 @@ import {
   Divider,
   FormControlLabel,
   Checkbox,
+  CircularProgress,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import Visibility from '@mui/icons-material/Visibility';
@@ -21,17 +22,19 @@ import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PhoneIcon from '@mui/icons-material/Phone';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from './server';
 
 const FamilyRegister = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     mobile: '',
     email: '',
     password: '',
     confirmPassword: '',
-    groupCode: '',
+    patientMobile: '',
     relationship: '',
     agreeTerms: false,
   });
@@ -55,8 +58,11 @@ const FamilyRegister = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+
     // Basic validation
     if (
       !formData.name ||
@@ -64,25 +70,29 @@ const FamilyRegister = () => {
       !formData.email ||
       !formData.password ||
       !formData.confirmPassword ||
-      !formData.groupCode ||
+      !formData.patientMobile ||
       !formData.relationship
     ) {
       setError('Please fill in all fields');
+      setLoading(false);
       return;
     }
 
     if (!formData.agreeTerms) {
       setError('Please agree to the terms and conditions');
+      setLoading(false);
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
+      setLoading(false);
       return;
     }
 
     if (formData.password.length < 6) {
       setError('Password must be at least 6 characters long');
+      setLoading(false);
       return;
     }
 
@@ -90,23 +100,75 @@ const FamilyRegister = () => {
     const mobileRegex = /^[0-9]{10}$/;
     if (!mobileRegex.test(formData.mobile.replace(/[^0-9]/g, ''))) {
       setError('Please enter a valid 10-digit Indian mobile number');
+      setLoading(false);
       return;
     }
 
-    // In a real app, we would verify the group code and register with a backend
-    // For demo purposes, just log in the family member
-    const userData = {
-      name: formData.name,
-      mobile: formData.mobile,
-      email: formData.email,
-      groupCode: formData.groupCode,
-      relationship: formData.relationship,
-      // Other family member data
-    };
+    if (!mobileRegex.test(formData.patientMobile.replace(/[^0-9]/g, ''))) {
+      setError('Please enter a valid 10-digit Indian mobile number for the patient');
+      setLoading(false);
+      return;
+    }
 
-    login('family', userData);
-    // Navigate to dashboard after successful registration
-    navigate('/family/dashboard');
+    try {
+      // Step 1: Sign up user with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (authError) throw authError;
+
+      // Step 2: Verify the patient's mobile number and get patient ID
+      const { data: patientData, error: patientError } = await supabase
+        .from('patients')
+        .select('id, name')
+        .eq('mobile', formData.patientMobile)
+        .single();
+
+      if (patientError || !patientData) {
+        throw new Error('Patient not found. Please check the mobile number and try again.');
+      }
+
+      // Step 3: Insert family member data
+      const { data: familyData, error: familyError } = await supabase
+        .from('family_members')
+        .insert([
+          {
+            id: authData.user.id,
+            name: formData.name,
+            mobile: formData.mobile,
+            email: formData.email,
+            relationship: formData.relationship,
+            patient_mobile: formData.patientMobile,
+            patient_id: patientData.id,
+          },
+        ]);
+
+      if (familyError) throw familyError;
+
+      // Step 4: Store user data in context
+      const userData = {
+        id: authData.user.id,
+        name: formData.name,
+        email: formData.email,
+        mobile: formData.mobile,
+        relationship: formData.relationship,
+        patient_id: patientData.id,
+        patient_name: patientData.name,
+        patient_mobile: formData.patientMobile,
+        type: 'family',
+      };
+
+      // Step 5: Login the user and navigate
+      login('family', userData);
+      navigate('/family/dashboard');
+    } catch (error) {
+      console.error('Registration error:', error.message);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -262,17 +324,23 @@ const FamilyRegister = () => {
 
               <TextField
                 fullWidth
-                label='Group Code'
-                name='groupCode'
-                value={formData.groupCode}
+                label="Patient's Mobile Number"
+                name='patientMobile'
+                value={formData.patientMobile}
                 onChange={handleInputChange}
                 margin='normal'
                 variant='outlined'
                 required
-                helperText='Enter the group code provided by the patient'
+                placeholder='e.g. 9876543210'
                 InputProps={{
                   sx: { borderRadius: 2 },
+                  startAdornment: (
+                    <InputAdornment position='start'>
+                      <PhoneIcon color='action' />
+                    </InputAdornment>
+                  ),
                 }}
+                helperText="Enter the patient's 10-digit Indian mobile number"
               />
 
               <TextField
@@ -361,8 +429,13 @@ const FamilyRegister = () => {
                 variant='contained'
                 color='primary'
                 size='large'
+                disabled={loading}
                 sx={{ py: 1.5, borderRadius: 2, fontSize: '1.1rem', mb: 2 }}>
-                Register
+                {loading ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  'Register'
+                )}
               </Button>
             </form>
 

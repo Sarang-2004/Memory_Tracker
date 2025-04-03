@@ -25,20 +25,12 @@ import PeopleIcon from '@mui/icons-material/People';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import { PhotoUploader, VoiceRecorder } from './';
-import catImage from '../assets/cat.jpg';
+import { supabase } from '../pages/server';
 
-const MemoryForm = () => {
+const MemoryForm = ({ memoryData, setMemoryData }) => {
   const [memoryType, setMemoryType] = useState('photo');
-  const [formData, setFormData] = useState({
-    title: '',
-    date: new Date().toISOString().split('T')[0],
-    location: '',
-    people: [],
-    content: '',
-    filter: 'none',
-  });
   const [newPerson, setNewPerson] = useState('');
-  const [photoPreview, setPhotoPreview] = useState(catImage);
+  const [photoPreview, setPhotoPreview] = useState('');
   const [notification, setNotification] = useState({
     open: false,
     message: '',
@@ -48,23 +40,25 @@ const MemoryForm = () => {
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setMemoryData({ ...memoryData, [name]: value });
   };
 
   // Handle memory type change
   const handleTypeChange = (e) => {
-    setMemoryType(e.target.value);
-    if (e.target.value === 'photo') {
-      setPhotoPreview(catImage);
+    const newType = e.target.value;
+    setMemoryType(newType);
+    setMemoryData({ ...memoryData, type: newType });
+    if (newType === 'photo') {
+      setPhotoPreview('');
     }
   };
 
   // Handle adding a person
   const handleAddPerson = () => {
-    if (newPerson.trim() && !formData.people.includes(newPerson.trim())) {
-      setFormData({
-        ...formData,
-        people: [...formData.people, newPerson.trim()],
+    if (newPerson.trim() && !memoryData.people?.includes(newPerson.trim())) {
+      setMemoryData({
+        ...memoryData,
+        people: [...(memoryData.people || []), newPerson.trim()],
       });
       setNewPerson('');
     }
@@ -72,24 +66,105 @@ const MemoryForm = () => {
 
   // Handle removing a person
   const handleRemovePerson = (personToRemove) => {
-    setFormData({
-      ...formData,
-      people: formData.people.filter((person) => person !== personToRemove),
+    setMemoryData({
+      ...memoryData,
+      people: (memoryData.people || []).filter((person) => person !== personToRemove),
     });
   };
 
   // Handle photo upload
-  const handlePhotoUpload = (file) => {
-    // In a real app, this would upload to a server
-    // For now, we'll just create a local URL for preview
-    const previewUrl = URL.createObjectURL(file);
-    setPhotoPreview(previewUrl);
-    setFormData({ ...formData, content: previewUrl });
+  const handlePhotoUpload = async (file) => {
+    try {
+      // Upload file to Supabase Storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `public/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('memories')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('memories')
+        .getPublicUrl(filePath);
+
+      // Store the full URL in memoryData
+      setPhotoPreview(URL.createObjectURL(file));
+      setMemoryData({ 
+        ...memoryData, 
+        content: publicUrl,
+        type: 'photo' // Ensure type is set to photo
+      });
+    } catch (error) {
+      console.error('Error uploading file:', error.message);
+      showNotification('Error uploading file. Please try again.', 'error');
+    }
   };
 
   // Handle voice recording
-  const handleVoiceRecorded = (audioUrl) => {
-    setFormData({ ...formData, content: audioUrl });
+  const handleVoiceRecorded = async (audioBlob) => {
+    try {
+      // Convert the audio blob to a file with proper MIME type
+      const audioFile = new File([audioBlob], 'voice-recording.mp3', { type: 'audio/mpeg' });
+      
+      // Upload audio file to Supabase Storage
+      const fileName = `${Math.random()}.mp3`;
+      const filePath = `public/${fileName}`;
+
+      // First, try to delete any existing file with the same name
+      await supabase.storage
+        .from('memories')
+        .remove([filePath]);
+
+      // Upload the new file with proper options
+      const { error: uploadError } = await supabase.storage
+        .from('memories')
+        .upload(filePath, audioFile, {
+          contentType: 'audio/mpeg',
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('memories')
+        .getPublicUrl(filePath);
+
+      console.log('Uploaded audio URL:', publicUrl);
+
+      // Test if the audio file is accessible
+      try {
+        const response = await fetch(publicUrl);
+        if (!response.ok) {
+          throw new Error('Audio file not accessible');
+        }
+      } catch (error) {
+        console.error('Error testing audio URL:', error);
+        throw new Error('Audio file not accessible');
+      }
+
+      // Update memory data with the public URL
+      setMemoryData({ 
+        ...memoryData, 
+        content: publicUrl,
+        type: 'voice' // Ensure type is set to voice
+      });
+
+      // Show success notification
+      showNotification('Voice recording saved successfully!', 'success');
+    } catch (error) {
+      console.error('Error uploading audio:', error.message);
+      showNotification('Error uploading audio. Please try again.', 'error');
+    }
   };
 
   // Handle form submission
@@ -97,7 +172,7 @@ const MemoryForm = () => {
     e.preventDefault();
 
     // Validate form
-    if (!formData.title) {
+    if (!memoryData.title) {
       showNotification('Please enter a title for your memory', 'error');
       return;
     }
@@ -107,28 +182,13 @@ const MemoryForm = () => {
       return;
     }
 
-    if (memoryType === 'text' && !formData.content) {
+    if (memoryType === 'text' && !memoryData.content) {
       showNotification('Please enter some text for your memory', 'error');
       return;
     }
 
-    // In a real app, this would save to a database
-    console.log('Saving memory:', { ...formData, type: memoryType });
-
     // Show success message
     showNotification('Memory saved successfully!', 'success');
-
-    // Reset form
-    setFormData({
-      title: '',
-      date: new Date().toISOString().split('T')[0],
-      location: '',
-      people: [],
-      content: '',
-      filter: 'none',
-    });
-    setPhotoPreview(catImage);
-    setMemoryType('photo');
   };
 
   // Show notification
@@ -189,7 +249,7 @@ const MemoryForm = () => {
                 fullWidth
                 label='Memory Title'
                 name='title'
-                value={formData.title}
+                value={memoryData.title}
                 onChange={handleInputChange}
               />
             </Grid>
@@ -201,7 +261,7 @@ const MemoryForm = () => {
                 label='Date'
                 type='date'
                 name='date'
-                value={formData.date}
+                value={memoryData.date}
                 onChange={handleInputChange}
                 InputLabelProps={{ shrink: true }}
               />
@@ -213,8 +273,9 @@ const MemoryForm = () => {
                 fullWidth
                 label='Location'
                 name='location'
-                value={formData.location}
+                value={memoryData.location || ''}
                 onChange={handleInputChange}
+                placeholder="Enter or select a location"
                 InputProps={{
                   startAdornment: (
                     <LocationOnIcon color='action' sx={{ mr: 1 }} />
@@ -249,7 +310,7 @@ const MemoryForm = () => {
               </Box>
 
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {formData.people.map((person) => (
+                {memoryData.people?.map((person) => (
                   <Chip
                     key={person}
                     label={person}
@@ -292,7 +353,7 @@ const MemoryForm = () => {
                         labelId='filter-label'
                         id='filter'
                         name='filter'
-                        value={formData.filter}
+                        value={memoryData.filter || 'none'}
                         label='Apply Filter'
                         onChange={handleInputChange}>
                         <MenuItem value='none'>No Filter</MenuItem>
@@ -312,27 +373,27 @@ const MemoryForm = () => {
                             maxHeight: '300px',
                             objectFit: 'contain',
                             borderRadius:
-                              formData.filter === 'none' ? '4px' : '0',
+                              memoryData.filter === 'none' ? '4px' : '0',
                             border:
-                              formData.filter === 'polaroid'
+                              memoryData.filter === 'polaroid'
                                 ? '15px solid white'
-                                : formData.filter === 'sepia'
+                                : memoryData.filter === 'sepia'
                                 ? '5px solid #d4b483'
-                                : formData.filter === 'vintage'
+                                : memoryData.filter === 'vintage'
                                 ? '8px solid #f5f5f5'
                                 : 'none',
                             boxShadow:
-                              formData.filter !== 'none'
+                              memoryData.filter !== 'none'
                                 ? '0 4px 8px rgba(0, 0, 0, 0.15)'
                                 : 'none',
                             transform:
-                              formData.filter === 'polaroid'
+                              memoryData.filter === 'polaroid'
                                 ? 'rotate(-2deg)'
                                 : 'none',
                             filter:
-                              formData.filter === 'sepia'
+                              memoryData.filter === 'sepia'
                                 ? 'sepia(100%)'
-                                : formData.filter === 'vintage'
+                                : memoryData.filter === 'vintage'
                                 ? 'grayscale(50%)'
                                 : 'none',
                           }}
@@ -359,7 +420,7 @@ const MemoryForm = () => {
                   rows={6}
                   label='Write your memory'
                   name='content'
-                  value={formData.content}
+                  value={memoryData.content}
                   onChange={handleInputChange}
                   placeholder='Share your thoughts, stories, or memories here...'
                 />

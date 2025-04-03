@@ -12,6 +12,7 @@ import {
   MenuItem,
   CardActionArea,
   Avatar,
+  Skeleton,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -23,6 +24,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { alpha } from '@mui/material/styles';
 import catImage from '../assets/cat.jpg';
+import AudioPlayer from './AudioPlayer';
 
 // Use cat image as a backup
 const defaultImage = catImage;
@@ -33,7 +35,7 @@ const MemoryCard = ({
     title: 'Family Picnic',
     date: '2023-06-15',
     type: 'photo', // 'photo', 'voice', 'text'
-    content: defaultImage, // Use default image
+    content: '',
     location: 'Central Park',
     people: ['Mom', 'Dad', 'Sister'],
     filter: 'polaroid', // 'polaroid', 'sepia', 'vintage', 'none'
@@ -43,6 +45,7 @@ const MemoryCard = ({
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
   const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
 
   const handleClick = (event) => {
     event.stopPropagation();
@@ -60,6 +63,11 @@ const MemoryCard = ({
 
   const handleImageError = () => {
     setImageError(true);
+    setImageLoading(false);
+  };
+
+  const handleImageLoad = () => {
+    setImageLoading(false);
   };
 
   // Apply different styles based on the filter type
@@ -90,27 +98,47 @@ const MemoryCard = ({
     }
   };
 
-  // Render different content based on memory type
-  const renderMemoryContent = () => {
+  // Render content based on memory type
+  const renderContent = () => {
     switch (memory.type) {
       case 'photo':
         return (
-          <Box sx={{ position: 'relative', overflow: 'hidden' }}>
-            <CardMedia
-              component='img'
-              height='200'
-              image={imageError ? defaultImage : memory.content || defaultImage}
-              alt={memory.title}
-              onError={handleImageError}
-              sx={{
-                ...getFilterStyle(),
-                transition: 'transform 0.5s ease',
-                '&:hover': {
-                  transform: 'scale(1.05)',
-                },
-                mb: 0,
-              }}
-            />
+          <Box sx={{ position: 'relative', overflow: 'hidden', height: 200 }}>
+            {imageLoading && (
+              <Skeleton 
+                variant="rectangular" 
+                width="100%" 
+                height="100%" 
+                animation="wave"
+              />
+            )}
+            {!imageError ? (
+              <img
+                src={memory.content}
+                alt={memory.title}
+                onError={handleImageError}
+                onLoad={handleImageLoad}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  display: imageLoading ? 'none' : 'block',
+                  ...getFilterStyle(),
+                }}
+              />
+            ) : (
+              <Box
+                sx={{
+                  width: '100%',
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  bgcolor: 'background.paper',
+                }}>
+                <PhotoIcon sx={{ fontSize: 40, color: 'text.secondary' }} />
+              </Box>
+            )}
             <Box
               sx={{
                 position: 'absolute',
@@ -120,7 +148,7 @@ const MemoryCard = ({
                 borderRadius: '50%',
                 p: 0.5,
               }}>
-              <PhotoIcon color='primary' fontSize='small' />
+              <PhotoIcon color="primary" fontSize="small" />
             </Box>
           </Box>
         );
@@ -136,6 +164,7 @@ const MemoryCard = ({
               bgcolor: alpha('#2196f3', 0.1),
               position: 'relative',
               overflow: 'hidden',
+              p: 2,
             }}>
             <Avatar
               sx={{
@@ -150,46 +179,13 @@ const MemoryCard = ({
                 },
                 transition: 'all 0.3s ease',
               }}>
-              <PlayArrowIcon sx={{ fontSize: 40, color: 'white' }} />
+              <MicIcon sx={{ fontSize: 40, color: 'white' }} />
             </Avatar>
             <Typography variant='subtitle1' sx={{ fontWeight: 500 }}>
               Voice Recording
             </Typography>
-            <Box
-              sx={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: 40,
-                background: `linear-gradient(90deg, ${alpha(
-                  '#2196f3',
-                  0.2
-                )} 0%, ${alpha('#2196f3', 0.4)} 50%, ${alpha(
-                  '#2196f3',
-                  0.2
-                )} 100%)`,
-              }}
-              component={motion.div}
-              animate={{
-                backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-              }}
-              transition={{
-                duration: 5,
-                ease: 'linear',
-                repeat: Infinity,
-              }}
-            />
-            <Box
-              sx={{
-                position: 'absolute',
-                top: 10,
-                right: 10,
-                bgcolor: 'rgba(255, 255, 255, 0.8)',
-                borderRadius: '50%',
-                p: 0.5,
-              }}>
-              <MicIcon color='primary' fontSize='small' />
+            <Box sx={{ width: '100%', mt: 2 }}>
+              <AudioPlayer filePath={memory.content} showControls={false} />
             </Box>
           </Box>
         );
@@ -273,7 +269,7 @@ const MemoryCard = ({
           position: 'relative',
         }}>
         <CardActionArea onClick={handleCardClick}>
-          {renderMemoryContent()}
+          {renderContent()}
 
           <CardContent>
             <Box

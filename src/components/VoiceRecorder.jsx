@@ -241,17 +241,6 @@ const VoiceRecorder = ({ onRecordingComplete }) => {
               Delete
             </Button>
             <Button
-              variant='contained'
-              color='primary'
-              startIcon={<SaveIcon />}
-              onClick={() => {
-                if (onRecordingComplete) {
-                  onRecordingComplete(audioUrl);
-                }
-              }}>
-              Save
-            </Button>
-            <Button
               variant='outlined'
               color='primary'
               startIcon={<MicIcon />}
