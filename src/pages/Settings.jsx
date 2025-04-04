@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -21,21 +21,25 @@ import {
   InputLabel,
   FormControl,
   Alert,
+  CircularProgress,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PersonIcon from '@mui/icons-material/Person';
 import PeopleIcon from '@mui/icons-material/People';
 import AccessibilityNewIcon from '@mui/icons-material/AccessibilityNew';
-import NotificationsIcon from '@mui/icons-material/Notifications';
 import SecurityIcon from '@mui/icons-material/Security';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import { AccessibilityControls, EmergencyContact } from '../components';
 import { useTheme } from '../contexts/ThemeContext';
+import { supabase } from './server';
+import { useAuth } from '../contexts/AuthContext';
 
 const Settings = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState({
     open: false,
     message: '',
@@ -44,22 +48,63 @@ const Settings = () => {
 
   // Get theme from context
   const { mode, toggleTheme } = useTheme();
-
-  // Mock user data
+  
+  // User data state
   const [userData, setUserData] = useState({
-    name: 'Alice Johnson',
-    email: 'alice.johnson@example.com',
-    phone: '(555) 123-4567',
+    name: '',
+    email: '',
+    phone: '',
     fontSize: 16,
     highContrast: false,
-    notifications: true,
-    reminderFrequency: 'daily',
   });
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        setLoading(true);
+        // Get the current user's ID
+        const { data: { user: authUser }, error: userError } = await supabase.auth.getUser();
+        if (userError || !authUser) {
+          throw new Error("User not authenticated");
+        }
+
+        // Fetch user data based on user type
+        let tableName = user?.type === 'patient' ? 'patients' : 'family_members';
+        const { data, error } = await supabase
+          .from(tableName)
+          .select('*')
+          .eq('id', authUser.id)
+          .single();
+
+        if (error) throw error;
+
+        if (data) {
+          setUserData(prev => ({
+            ...prev,
+            name: data.name || '',
+            email: data.email || '',
+            phone: data.mobile || '',
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        setNotification({
+          open: true,
+          message: 'Error loading user data',
+          severity: 'error',
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchUserData();
+  }, [user?.type]);
 
   const handleBack = () => {
     navigate(-1);
   };
-
+    
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
   };
@@ -78,22 +123,60 @@ const Settings = () => {
     setUserData({ ...userData, fontSize: newValue });
   };
 
-  const handleSaveProfile = () => {
-    // In a real app, this would save to a backend
-    setNotification({
-      open: true,
-      message: 'Profile updated successfully',
-      severity: 'success',
-    });
-    setTimeout(() => {
-      setNotification({ ...notification, open: false });
-    }, 3000);
+  const handleSaveProfile = async () => {
+    try {
+      setLoading(true);
+      // Get the current user's ID
+      const { data: { user: authUser }, error: userError } = await supabase.auth.getUser();
+      if (userError || !authUser) {
+        throw new Error("User not authenticated");
+      }
+
+      // Update user data based on user type
+      let tableName = user?.type === 'patient' ? 'patients' : 'family_members';
+    const { error } = await supabase
+        .from(tableName)
+      .update({
+        name: userData.name,
+        email: userData.email,
+        mobile: userData.phone,
+      })
+        .eq('id', authUser.id);
+
+      if (error) throw error;
+
+      setNotification({
+        open: true,
+        message: 'Profile updated successfully',
+        severity: 'success',
+      });
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      setNotification({
+        open: true,
+        message: 'Error updating profile',
+        severity: 'error',
+      });
+    } finally {
+      setLoading(false);
+      setTimeout(() => {
+        setNotification({ ...notification, open: false });
+      }, 3000);
+    }
   };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Container maxWidth='md' sx={{ mt: 2, mb: 4 }}>
       <div>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
           <Button
             startIcon={<ArrowBackIcon />}
             onClick={handleBack}
@@ -103,7 +186,7 @@ const Settings = () => {
           <Typography variant='h4' component='h1'>
             Settings
           </Typography>
-        </Box>
+      </Box>
 
         {notification.open && (
           <Alert severity={notification.severity} sx={{ mb: 3 }}>
@@ -128,18 +211,13 @@ const Settings = () => {
               label='Family Connections'
               iconPosition='start'
             />
-            <Tab
-              icon={<NotificationsIcon />}
-              label='Notifications'
-              iconPosition='start'
-            />
           </Tabs>
 
           {/* Profile Tab */}
           {activeTab === 0 && (
             <Box sx={{ p: 3 }}>
-              <Grid container spacing={3}>
-                <Grid item xs={12} md={4} sx={{ textAlign: 'center' }}>
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={4} sx={{ textAlign: 'center' }}>
                   <Avatar
                     sx={{ width: 120, height: 120, mx: 'auto', mb: 2 }}
                     alt={userData.name}
@@ -149,8 +227,8 @@ const Settings = () => {
                   <Button variant='outlined' color='primary'>
                     Change Photo
                   </Button>
-                </Grid>
-                <Grid item xs={12} md={8}>
+          </Grid>
+          <Grid item xs={12} md={8}>
                   <Typography variant='h6' gutterBottom>
                     Personal Information
                   </Typography>
@@ -188,8 +266,9 @@ const Settings = () => {
                     <Button
                       variant='contained'
                       color='primary'
-                      onClick={handleSaveProfile}>
-                      Save Changes
+                      onClick={handleSaveProfile}
+                      disabled={loading}>
+                      {loading ? <CircularProgress size={24} /> : 'Save Changes'}
                     </Button>
                   </Box>
                 </Grid>
@@ -249,19 +328,6 @@ const Settings = () => {
                   max={24}
                 />
               </Box>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={userData.highContrast}
-                    onChange={handleSwitchChange}
-                    name='highContrast'
-                    color='primary'
-                  />
-                }
-                label='High Contrast Mode'
-              />
-              <Divider sx={{ my: 3 }} />
-              <AccessibilityControls />
             </Box>
           )}
 
@@ -276,50 +342,6 @@ const Settings = () => {
                 access your memories and help you.
               </Typography>
               <EmergencyContact />
-            </Box>
-          )}
-
-          {/* Notifications Tab */}
-          {activeTab === 3 && (
-            <Box sx={{ p: 3 }}>
-              <Typography variant='h6' gutterBottom>
-                Notification Preferences
-              </Typography>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={userData.notifications}
-                    onChange={handleSwitchChange}
-                    name='notifications'
-                    color='primary'
-                  />
-                }
-                label='Enable Notifications'
-              />
-              <Box sx={{ mt: 3 }}>
-                <FormControl fullWidth disabled={!userData.notifications}>
-                  <InputLabel id='reminder-frequency-label'>
-                    Reminder Frequency
-                  </InputLabel>
-                  <Select
-                    labelId='reminder-frequency-label'
-                    id='reminder-frequency'
-                    value={userData.reminderFrequency}
-                    label='Reminder Frequency'
-                    name='reminderFrequency'
-                    onChange={handleInputChange}>
-                    <MenuItem value='daily'>Daily</MenuItem>
-                    <MenuItem value='weekly'>Weekly</MenuItem>
-                    <MenuItem value='monthly'>Monthly</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
-              <Box sx={{ mt: 3 }}>
-                <Typography variant='body2' color='text.secondary'>
-                  Notifications help you remember to add new memories and stay
-                  connected with your family members.
-                </Typography>
-              </Box>
             </Box>
           )}
         </Paper>
@@ -341,8 +363,8 @@ const Settings = () => {
                 Delete Account
               </Button>
             </Grid>
-          </Grid>
-        </Paper>
+        </Grid>
+      </Paper>
       </div>
     </Container>
   );

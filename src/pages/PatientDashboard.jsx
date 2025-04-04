@@ -41,6 +41,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import catImage from '../assets/cat.jpg';
+import { useMemory } from '../contexts/MemoryContext';
 
 const PatientDashboard = () => {
   const navigate = useNavigate();
@@ -52,27 +53,40 @@ const PatientDashboard = () => {
 
   // Create a combined userData object with defaults and auth data
   const [memories, setMemories] = useState([]);
-const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [recentLocations, setRecentLocations] = useState([]);
+  const { refreshTrigger } = useMemory();
 
-useEffect(() => {
-  const fetchMemories = async () => {
-    try {
+  useEffect(() => {
+    const fetchMemories = async () => {
+      try {
         // Get the current user's ID
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         if (userError || !user) {
           throw new Error("User not authenticated");
         }
 
-      const { data, error } = await supabase
-        .from('memories')
+        // First, get all family members connected to this patient
+        const { data: familyMembers, error: familyError } = await supabase
+          .from('family_members')
+          .select('id')
+          .eq('patient_id', user.id);
+
+        if (familyError) throw familyError;
+
+        // Create an array of user IDs (patient + family members)
+        const userIds = [user.id, ...(familyMembers?.map(fm => fm.id) || [])];
+
+        // Fetch memories created by either the patient or their family members
+        const { data, error } = await supabase
+          .from('memories')
           .select('*')
-          .eq('user_id', user.id) // Filter by current user's ID
+          .in('user_id', userIds)
           .order('date', { ascending: false });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      setMemories(data || []);
+        setMemories(data || []);
 
         // Get unique locations, keeping only the most recent occurrence of each
         const uniqueLocations = data
@@ -86,27 +100,27 @@ useEffect(() => {
           .slice(0, 3); // Take only the first 3 unique locations
 
         setRecentLocations(uniqueLocations);
-    } catch (error) {
-      console.error('Error fetching memories:', error.message);
-    } finally {
-      setLoading(false);
-    }
+      } catch (error) {
+        console.error('Error fetching memories:', error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMemories();
+  }, [refreshTrigger]);
+
+  const handleAddMemory = () => {
+    navigate('/add-memory');
   };
 
-  fetchMemories();
-}, []);
+  const handleViewMemory = (id) => {
+    navigate(`/memory/${id}`);
+  };
 
-const handleAddMemory = () => {
-  navigate('/add-memory');
-};
-
-const handleViewMemory = (id) => {
-  navigate(`/memory/${id}`);
-};
-
-const toggleBreathingExercise = () => {
-  setShowBreathingExercise(!showBreathingExercise);
-};
+  const toggleBreathingExercise = () => {
+    setShowBreathingExercise(!showBreathingExercise);
+  };
 
   // Animation variants
   const itemVariants = {

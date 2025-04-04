@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from "./server";
 import { useNavigate } from 'react-router-dom';
+import { useMemory } from '../contexts/MemoryContext';
 import {
   Box,
   Typography,
@@ -21,6 +22,7 @@ import { MemoryForm } from '../components';
 
 const AddMemory = () => {
   const navigate = useNavigate();
+  const { triggerRefresh } = useMemory();
   const [activeStep, setActiveStep] = useState(0);
   const [completed, setCompleted] = useState(false);
   const [error, setError] = useState('');
@@ -80,10 +82,26 @@ const AddMemory = () => {
           throw new Error("User not authenticated! Please log in.");
         }
 
+        // Determine if the user is a family member
+        let userId = user.id;
+        if (user.type === 'family') {
+          // Get the patient ID from family_members table
+          const { data: familyData, error: familyError } = await supabase
+            .from('family_members')
+            .select('patient_id')
+            .eq('id', user.id)
+            .single();
+
+          if (familyError || !familyData) {
+            throw new Error("Could not find connected patient");
+          }
+          userId = familyData.patient_id;
+        }
+
         // Insert memory into Supabase
         const { error } = await supabase.from('memories').insert([
           {
-            user_id: user.id,
+            user_id: userId,
             title: memoryData.title,
             description: memoryData.description,
             content: memoryData.content,
@@ -97,8 +115,11 @@ const AddMemory = () => {
 
         if (error) throw error;
 
+        // Trigger memory refresh
+        triggerRefresh();
+
         setCompleted(true);
-        setTimeout(() => navigate('/patient/dashboard'), 2000);
+        setTimeout(() => navigate(user.type === 'family' ? '/family/dashboard' : '/patient/dashboard'), 2000);
       } catch (err) {
         setError(err.message);
       }

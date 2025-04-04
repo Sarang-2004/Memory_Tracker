@@ -119,10 +119,10 @@ const FamilyRegister = () => {
 
       if (authError) throw authError;
 
-      // Step 2: Verify the patient's mobile number and get patient ID
+      // Step 2: Find patient by mobile number
       const { data: patientData, error: patientError } = await supabase
         .from('patients')
-        .select('id, name')
+        .select('id, name, mobile')
         .eq('mobile', formData.patientMobile)
         .single();
 
@@ -140,7 +140,7 @@ const FamilyRegister = () => {
             mobile: formData.mobile,
             email: formData.email,
             relationship: formData.relationship,
-            patient_mobile: formData.patientMobile,
+            patient_mobile: patientData.mobile,
             patient_id: patientData.id,
           },
         ]);
@@ -156,7 +156,7 @@ const FamilyRegister = () => {
         relationship: formData.relationship,
         patient_id: patientData.id,
         patient_name: patientData.name,
-        patient_mobile: formData.patientMobile,
+        patient_mobile: patientData.mobile,
         type: 'family',
       };
 

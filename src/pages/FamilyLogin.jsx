@@ -12,6 +12,7 @@ import {
   IconButton,
   Alert,
   Divider,
+  CircularProgress,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import Visibility from '@mui/icons-material/Visibility';
@@ -19,6 +20,7 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import PeopleIcon from '@mui/icons-material/People';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from './server';
 
 const FamilyLogin = () => {
   const navigate = useNavigate();
@@ -29,6 +31,7 @@ const FamilyLogin = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -39,79 +42,78 @@ const FamilyLogin = () => {
     setShowPassword(!showPassword);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+
     // Basic validation
     if (!formData.email || !formData.password) {
       setError('Please fill in all fields');
+      setLoading(false);
       return;
     }
 
-    // In a real app, we would authenticate with a backend
-    // For demo purposes, we'll authenticate using the context
-    const userData = {
-      name: 'Sarah Thompson', // Demo user data
-      email: formData.email,
-      patientName: 'John Doe', // Demo connected patient
-      patientId: '123456',
-      relation: 'Daughter',
-      lastActive: 'Yesterday',
-      recentActivities: [
-        {
-          id: 1,
-          type: 'memory_added',
-          title: 'Added a new photo',
-          date: '2 hours ago',
-        },
-        {
-          id: 2,
-          type: 'routine_completed',
-          title: 'Completed morning routine',
-          date: 'Yesterday',
-        },
-        {
-          id: 3,
-          type: 'event_scheduled',
-          title: 'Doctor appointment scheduled',
-          date: '3 days ago',
-        },
-      ],
-      memories: [
-        {
-          id: 1,
-          title: 'Beach Day',
-          description: 'A wonderful day at Malibu Beach with Dad',
-          date: 'June 15, 2023',
-          imageUrl: 'https://source.unsplash.com/random/800x600/?beach',
-          location: 'Malibu, CA',
-          tags: ['family', 'beach', 'summer'],
-          reactions: 5,
-        },
-        {
-          id: 2,
-          title: 'Birthday Celebration',
-          description: "Dad's 65th birthday with all the grandchildren",
-          date: 'May 2, 2023',
-          imageUrl: 'https://source.unsplash.com/random/800x600/?birthday',
-          location: 'Home',
-          tags: ['birthday', 'family', 'celebration'],
-          reactions: 8,
-        },
-        {
-          id: 3,
-          title: 'Garden Visit',
-          description: 'Taking Dad to the Botanical Gardens',
-          date: 'April 10, 2023',
-          imageUrl: 'https://source.unsplash.com/random/800x600/?garden',
-          location: 'Botanical Gardens',
-          tags: ['nature', 'garden', 'spring'],
-          reactions: 3,
-        },
-      ],
-      // Add any other user data you need
-    };
+    try {
+      // Step 1: Authenticate with Supabase
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
 
-    login('family', userData);
+      if (authError) throw authError;
+
+      // Step 2: Fetch family member data
+      const { data: familyData, error: familyError } = await supabase
+        .from('family_members')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single();
+
+      if (familyError) throw familyError;
+
+      // Step 3: Fetch patient data
+      const { data: patientData, error: patientError } = await supabase
+        .from('patients')
+        .select('*')
+        .eq('id', familyData.patient_id)
+        .single();
+
+      if (patientError) throw patientError;
+
+      // Step 4: Fetch recent memories for the patient
+      const { data: memories, error: memoriesError } = await supabase
+        .from('memories')
+        .select('*')
+        .eq('user_id', patientData.id)
+        .order('date', { ascending: false })
+        .limit(3);
+
+      if (memoriesError) throw memoriesError;
+
+      // Step 5: Prepare user data for context
+      const userData = {
+        id: authData.user.id,
+        name: familyData.name,
+        email: familyData.email,
+        mobile: familyData.mobile,
+        relationship: familyData.relationship,
+        patient_id: patientData.id,
+        patient_name: patientData.name,
+        patient_mobile: patientData.mobile,
+        memories: memories || [],
+        type: 'family',
+      };
+
+      // Step 6: Login and navigate
+      login('family', userData);
+      navigate('/family/dashboard');
+    } catch (error) {
+      console.error('Login error:', error.message);
+      setError(error.message || 'Failed to login. Please check your credentials.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -247,8 +249,9 @@ const FamilyLogin = () => {
                 variant='contained'
                 color='primary'
                 size='large'
-                sx={{ py: 1.5, borderRadius: 2, fontSize: '1.1rem', mb: 2 }}>
-                Log In
+                sx={{ py: 1.5, borderRadius: 2, fontSize: '1.1rem', mb: 2 }}
+                disabled={loading}>
+                {loading ? <CircularProgress size={24} /> : 'Log In'}
               </Button>
 
               <Box sx={{ textAlign: 'center', mt: 2 }}>
